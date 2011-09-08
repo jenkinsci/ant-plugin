@@ -17,6 +17,7 @@ public class AntTargetNoteTest {
     @Before
     public void setUp() {
         enabled = AntTargetNote.ENABLED;
+        AntTargetNote.ENABLED = true;
     }
 
     @After
