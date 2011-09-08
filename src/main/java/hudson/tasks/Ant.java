@@ -40,6 +40,7 @@ import hudson.model.Node;
 import hudson.model.TaskListener;
 import hudson.remoting.Callable;
 import hudson.slaves.NodeSpecific;
+import hudson.tasks._ant.Messages;
 import hudson.tasks._ant.AntConsoleAnnotator;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
