@@ -35,18 +35,18 @@ if (descriptor.installations.length != 0) {
     }
 }
 
-f.entry(title:_("Targets"),help:"/help/ant/ant-targets.html") {
-    f.expandableTextbox(name:"ant.targets",value:instance?.targets)
+f.entry(title:_("Targets"),field:"targets") {
+    f.expandableTextbox()
 }
 
 f.advanced {
-    f.entry(title:_("Build File"),help:"/help/ant/ant-buildfile.html") {
-        f.expandableTextbox(name:"ant.buildFile",value:instance?.buildFile)
+    f.entry(title:_("Build File"),field:"buildFile") {
+        f.expandableTextbox()
     }
-    f.entry(title:_("Properties"),help:"/help/ant/ant-properties.html") {
-        f.expandableTextbox(name:"ant.properties",value:instance?.properties)
+    f.entry(title:_("Properties"),field:"properties") {
+        f.expandableTextbox()
     }
-    f.entry(title:_("Java Options"),help:"/help/ant/ant-opts.html") {
-        f.expandableTextbox(name:"ant.antOpts",value:instance?.antOpts)
+    f.entry(title:_("Java Options"),field:"antOpts") {
+        f.expandableTextbox()
     }
 }
