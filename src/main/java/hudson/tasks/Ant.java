@@ -278,11 +278,6 @@ public class Ant extends Builder {
             return true;
         }
 
-        @Override
-        public String getHelpFile() {
-            return "/help/project-config/ant.html";
-        }
-
         public String getDisplayName() {
             return Messages.Ant_DisplayName();
         }
