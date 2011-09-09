@@ -286,11 +286,6 @@ public class Ant extends Builder {
             return installations;
         }
 
-        @Override
-        public Ant newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return (Ant)req.bindJSON(clazz,formData);
-        }
-
         public void setInstallations(AntInstallation... antInstallations) {
             this.installations = antInstallations;
             save();
