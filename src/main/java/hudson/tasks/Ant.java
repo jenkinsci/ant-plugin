@@ -195,7 +195,7 @@ public class Ant extends Builder {
         args.addTokenized(targets.replaceAll("[\t\r\n]+"," "));
 
         if(ai!=null)
-            env.put("ANT_HOME",ai.getHome());
+            ai.buildEnvVars(env);
         if(antOpts!=null)
             env.put("ANT_OPTS",env.expand(antOpts));
 
@@ -331,6 +331,10 @@ public class Ant extends Builder {
          */
         public String getAntHome() {
             return getHome();
+        }
+
+        public void buildEnvVars(EnvVars env) {
+            env.put("ANT_HOME",getHome());
         }
 
         /**
