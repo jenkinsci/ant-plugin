@@ -9,6 +9,7 @@
   <artifactId>ant</artifactId>
   <version>1.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
+  <name>Ant Plugin</name>
 
   <url>http://wiki.jenkins-ci.org/display/JENKINS/Ant+Plugin</url>
 
