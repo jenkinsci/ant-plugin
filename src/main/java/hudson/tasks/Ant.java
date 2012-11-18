@@ -58,10 +58,13 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.List;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -186,11 +189,20 @@ public class Ant extends Builder {
             args.add("-file", buildFilePath.getName());
         }
 
-        Set<String> sensitiveVars = build.getSensitiveBuildVariables();
-
-        args.addKeyValuePairs("-D",build.getBuildVariables(),sensitiveVars);
-
-        args.addKeyValuePairsFromPropertyString("-D",properties,vr,sensitiveVars);
+        //add the properties to a temporary properties file
+        Properties props = new Properties();
+        props.putAll(build.getBuildVariables());
+        if (properties != null) {
+            for (Entry<Object, Object> e : Util.loadProperties(properties).entrySet()) {
+                props.put((String) e.getKey(), Util.replaceMacro(e.getValue().toString(), vr));
+            }
+        }
+        if (props.size() > 0) {
+            StringWriter sw = new StringWriter();
+            props.store(sw, "Jenkins build properties");
+            FilePath buildProperties = buildFilePath.getParent().createTextTempFile("jenkins_build", ".properties", sw.toString(), true);
+            args.add("-propertyfile", buildProperties.getName());
+        }
 
         args.addTokenized(targets.replaceAll("[\t\r\n]+"," "));
 
