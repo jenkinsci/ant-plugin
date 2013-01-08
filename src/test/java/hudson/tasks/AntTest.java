@@ -26,6 +26,7 @@ package hudson.tasks;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.FilePath;
 import hudson.Functions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -123,7 +124,7 @@ public class AntTest extends HudsonTestCase {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         String buildLog = getLog(build);
         assertNotNull(buildLog);
-	System.out.println(buildLog);
+        System.out.println(buildLog);
         assertFalse(buildLog.contains("-Dpassword=12345"));
     }
 
@@ -150,7 +151,7 @@ public class AntTest extends HudsonTestCase {
         // Odd build tag, but it's constructed with getParent().getName() and the parent is the
         // matrix configuration, not the project.. if matrix build tag ever changes, update
         // expected value here:
-        assertTrue("Missing $BUILD_TAG: " + log, log.contains("vTAG=jenkins-AX=is-1"));
+        assertTrue("Missing $BUILD_TAG: " + log, log.contains("vTAG=jenkins-AX\\=is-1"));
         assertTrue("Missing $EXECUTOR_NUMBER: " + log, log.matches("(?s).*vEXEC=\\d.*"));
         // $NODE_NAME is expected to be empty when running on master.. not checking.
         assertTrue("Missing $NODE_LABELS: " + log, log.contains("vLAB=master"));
@@ -187,6 +188,28 @@ public class AntTest extends HudsonTestCase {
                    log.matches("(?s).*vHOME=(?!" + homeVar + ").*"));
         assertTrue("Missing HOME ant property with other text: " + log,
                    log.matches("(?s).*vFOOHOME=Foo (?!" + homeVar + ").*"));
+    }
+
+    public void testAntProperties() throws Exception {
+        String antName = configureDefaultAnt().getName();
+        FreeStyleProject project = createFreeStyleProject();
+        project.addProperty(new ParametersDefinitionProperty(
+                new StringParameterDefinition("TEXT", "A long property with \"quotes\"", "")));
+        project.setScm(new ExtractResourceSCM(getClass().getResource("ant-job.zip")));
+        project.getBuildersList().add(new Ant("", antName, null, null,
+                "vFOO=foo\nvBAR=bar\nvTEXT=$TEXT\n"));
+        FreeStyleBuild build = project.scheduleBuild2(0, new UserCause()).get();
+        assertBuildStatusSuccess(build);
+        String log = getLog(build);
+        assertTrue("Missing vFOO property: " + log,
+                   log.contains("vFOO=foo"));
+        assertTrue("Missing vBAR property: " + log,
+                   log.contains("vBAR=bar"));
+        assertTrue("Missing vTEXT property: " + log,
+                   log.contains("vTEXT=A long property with \"quotes\""));
+        FilePath workspace = build.getWorkspace();
+        FilePath[] list = workspace.list("jenkins_build*.properties");
+        assertTrue("Ant properties file not removed", list == null || list.length == 0);
     }
 
     @Bug(7108)
