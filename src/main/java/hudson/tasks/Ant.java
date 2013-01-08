@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2010, Sun Microsystems, Inc., Kohsuke Kawaguchi, Tom Huybrechts, Yahoo! Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,14 +58,17 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.List;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Ant launcher.
@@ -99,7 +102,7 @@ public class Ant extends Builder {
      * Optional properties to be passed to Ant. Follows {@link Properties} syntax.
      */
     private final String properties;
-    
+
     @DataBoundConstructor
     public Ant(String targets,String antName, String antOpts, String buildFile, String properties) {
         this.targets = targets;
@@ -109,13 +112,13 @@ public class Ant extends Builder {
         this.properties = Util.fixEmptyAndTrim(properties);
     }
 
-	public String getBuildFile() {
-		return buildFile;
-	}
+    public String getBuildFile() {
+        return buildFile;
+    }
 
-	public String getProperties() {
-		return properties;
-	}
+    public String getProperties() {
+        return properties;
+    }
 
     public String getTargets() {
         return targets;
@@ -146,7 +149,7 @@ public class Ant extends Builder {
 
         EnvVars env = build.getEnvironment(listener);
         env.overrideAll(build.getBuildVariables());
-        
+
         AntInstallation ai = getAnt();
         if(ai==null) {
             args.add(launcher.isUnix() ? "ant" : "ant.bat");
@@ -164,7 +167,7 @@ public class Ant extends Builder {
         VariableResolver<String> vr = new VariableResolver.ByMap<String>(env);
         String buildFile = env.expand(this.buildFile);
         String targets = env.expand(this.targets);
-        
+
         FilePath buildFilePath = buildFilePath(build.getModuleRoot(), buildFile, targets);
 
         if(!buildFilePath.exists()) {
@@ -192,16 +195,37 @@ public class Ant extends Builder {
         //add the properties to a temporary properties file
         Properties props = new Properties();
         props.putAll(build.getBuildVariables());
-        if (properties != null) {
+        Set<String> sensitiveVars = build.getSensitiveBuildVariables();
+        if(properties != null) {
             for (Entry<Object, Object> e : Util.loadProperties(properties).entrySet()) {
-                props.put((String) e.getKey(), Util.replaceMacro(e.getValue().toString(), vr));
+                String key = (String) e.getKey();
+                String value = Util.replaceMacro(e.getValue().toString(), vr);
+                props.put(key, value);
             }
         }
-        if (props.size() > 0) {
-            StringWriter sw = new StringWriter();
-            props.store(sw, "Jenkins build properties");
-            FilePath buildProperties = buildFilePath.getParent().createTextTempFile("jenkins_build", ".properties", sw.toString(), true);
-            args.add("-propertyfile", buildProperties.getName());
+        FilePath buildProperties = null;
+        if(props.size() > 0) {
+            Pattern var = Pattern.compile("%[a-zA-Z_]+[a-zA-Z0-9_]*%");
+            Matcher varMatcher = var.matcher("");
+            for (Iterator<Entry<Object, Object>> it = props.entrySet().iterator(); it.hasNext(); ) {
+                Entry<Object, Object> e = it.next();
+                String value = (String) e.getValue();
+                if(value.indexOf('$') >= 0 || varMatcher.reset(value).find()) {
+                    //likely has a shell variable, pass as a parameter
+                    String key = (String) e.getKey();
+                    args.addKeyValuePair("-D", key, value, sensitiveVars.contains(key));
+                    it.remove();
+                }
+            }
+
+            if(props.size() > 0) {
+                buildProperties = buildFilePath.getParent().createTempFile("jenkins_build", ".properties");
+                OutputStream os = buildProperties.write();
+                props.store(os, "Jenkins build properties");
+                os.flush();
+                os.close();
+                args.add("-propertyfile", buildProperties.getName());
+            }
         }
 
         args.addTokenized(targets.replaceAll("[\t\r\n]+"," "));
@@ -229,6 +253,15 @@ public class Ant extends Builder {
                 r = launcher.launch().cmds(args).envs(env).stdout(aca).pwd(buildFilePath.getParent()).join();
             } finally {
                 aca.forceEol();
+                if(buildProperties != null) {
+                    try {
+                        buildProperties.delete();
+                    } catch (IOException e) {
+                        Util.displayIOException(e,listener);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace( listener.error("Interrupted while deleting properties file") );
+                    }
+                }
             }
             return r==0;
         } catch (IOException e) {
@@ -251,7 +284,7 @@ public class Ant extends Builder {
     private static FilePath buildFilePath(FilePath base, String buildFile, String targets) {
         if(buildFile!=null)     return base.child(buildFile);
         // some users specify the -f option in the targets field, so take that into account as well.
-        // see 
+        // see
         String[] tokens = Util.tokenize(targets);
         for (int i = 0; i<tokens.length-1; i++) {
             String a = tokens[i];
@@ -395,7 +428,7 @@ public class Ant extends Builder {
                 return "Ant";
             }
 
-            // for compatibility reasons, the persistence is done by Ant.DescriptorImpl  
+            // for compatibility reasons, the persistence is done by Ant.DescriptorImpl
             @Override
             public AntInstallation[] getInstallations() {
                 return Jenkins.getInstance().getDescriptorByType(Ant.DescriptorImpl.class).getInstallations();
