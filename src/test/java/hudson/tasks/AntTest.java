@@ -150,7 +150,7 @@ public class AntTest extends HudsonTestCase {
         // Odd build tag, but it's constructed with getParent().getName() and the parent is the
         // matrix configuration, not the project.. if matrix build tag ever changes, update
         // expected value here:
-        assertTrue("Missing $BUILD_TAG: " + log, log.contains("vTAG=jenkins-AX=is-1"));
+        assertTrue("Missing $BUILD_TAG: " + log, log.contains("vTAG=jenkins-test project-AX\\=is-1"));
         assertTrue("Missing $EXECUTOR_NUMBER: " + log, log.matches("(?s).*vEXEC=\\d.*"));
         // $NODE_NAME is expected to be empty when running on master.. not checking.
         assertTrue("Missing $NODE_LABELS: " + log, log.contains("vLAB=master"));
