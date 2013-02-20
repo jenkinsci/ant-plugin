@@ -1,0 +1,16 @@
+<div>
+  您可以在這裡設定 Ant 建置所需的屬性值 (使用標準 <a
+  href="http://download.oracle.com/javase/6/docs/api/java/util/Properties.html#load%28java.io.Reader%29"
+  target="_new"> properties 檔案格式</a>):
+  <pre># 註解
+name1=value1
+name2=$VAR2
+</pre>
+  它們會被用 <code>"-Dname1=value1 -Dname2=value2"</code> 這種形式傳進 Ant。
+  請用 <code>$VAR</code> 這種格式參照到 Jenkins 定義的環境變數 (在 Windows 上也一樣)。
+  在 Windows 裡，Jenkins 外可能會用 <code>%VAR%</code> 這種方式參照環境變數值。
+  可以用半型反斜線 (\) 來轉義 (Escaping)，所以一個反斜線要用 <code>\\</code> 表示。
+  不要用半型雙引號 (")，因為 Ant 在 *nix 上會把參數用雙引號括起來，再透過 <code>eval</code>
+  執行，而 Windows 也有轉義上的問題... 不管是哪種情況，用雙引號都可能讓建置失敗。
+  要定義空屬性，只要寫 <code>varname=</code> 就可以了。
+</div>
