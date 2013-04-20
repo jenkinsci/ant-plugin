@@ -1,10 +1,21 @@
 ﻿<div>
   Vous pouvez indiquer ici les propriétés nécessaires pour votre build Ant
-  (avec le format standard des fichiers de propriétés)&nbsp;:
+  (avec le <a
+  href="http://download.oracle.com/javase/6/docs/api/java/util/Properties.html#load%28java.io.Reader%29"
+  target="_new">format standard des fichiers de propriétés</a>)&nbsp;:
   <pre># commentaire
 nom1=valeur1
-nom2=valeur2
+nom2=$VAR2
 </pre>
   Ces propriétés sont passées à Ant ainsi&nbsp;:
-  <tt>"-Dnom1=valeur1 -Dnom2=valeur2"</tt>
+  <tt>"-Dnom1=valeur1 -Dnom2=valeur2"</tt>.
+  Utilisez toujours la forme <tt>$VAR</tt> (même sur Windows) pour les références
+  aux variable d'environnement définies dans Jenkins.
+  Sur Windows, les références de la forme <tt>%VAR%</tt> peuvent être utilisées
+  pour les variables d'environnement qui existent en dehors de Jenkins.
+  Les anti-slashs sont utilisés pour l'échappement, ainsi utiliser <tt>\\</tt> pour un seul anti-slash.
+  Les double quotes (") doivent être évités, car ant sur *nix entoure les paramètres de quotes
+  et les passe dans <tt>eval</tt>, et Windows a ses propres problèmes d'échappement.
+  Dans chaque cas, l'usage des quotes peut entraîner des échecs de build.
+  Pour définir une propriété vide, écrire simplement <tt>varname=</tt>
 </div>
