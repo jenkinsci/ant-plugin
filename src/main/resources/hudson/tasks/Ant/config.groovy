@@ -39,7 +39,7 @@ f.entry(title:_("Targets"),field:"targets") {
     f.expandableTextbox()
 }
 
-f.advanced {
+def advancedEntries = {
     f.entry(title:_("Build File"),field:"buildFile") {
         f.expandableTextbox()
     }
@@ -49,4 +49,10 @@ f.advanced {
     f.entry(title:_("Java Options"),field:"antOpts") {
         f.expandableTextbox()
     }
+}
+if(instance.properties || instance.buildFile || instance.antOpts) {
+  advancedEntries()
+}
+else {
+  f.advanced(advancedEntries)
 }
