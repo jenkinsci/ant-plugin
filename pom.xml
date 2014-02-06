@@ -23,9 +23,12 @@
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
         <artifactId>maven-hpi-plugin</artifactId>
-        <version>1.76</version>
+        <version>1.96</version>
         <configuration>
           <dependencyResolution>compile</dependencyResolution>
+          <systemProperties>
+            <hudson.bundled.plugins>${basedir}/work/plugins/ant.hpl</hudson.bundled.plugins>
+          </systemProperties>
         </configuration>
       </plugin>
     </plugins>
