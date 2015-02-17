@@ -167,29 +167,12 @@ public class Ant extends Builder {
         VariableResolver<String> vr = new VariableResolver.ByMap<String>(env);
         String buildFile = env.expand(this.buildFile);
         String targets = env.expand(this.targets);
-        
-        FilePath buildFilePath = buildFilePath(build.getModuleRoot(), buildFile, targets);
 
-        if(!buildFilePath.exists()) {
-            // because of the poor choice of getModuleRoot() with CVS/Subversion, people often get confused
-            // with where the build file path is relative to. Now it's too late to change this behavior
-            // due to compatibility issue, but at least we can make this less painful by looking for errors
-            // and diagnosing it nicely. See HUDSON-1782
+        FilePath buildFilePath = chooseBuildFilePath(build, buildFile, targets);
 
-            // first check if this appears to be a valid relative path from workspace root
-            FilePath workspaceFilePath = build.getWorkspace();
-            if (workspaceFilePath != null) {
-                FilePath buildFilePath2 = buildFilePath(workspaceFilePath, buildFile, targets);
-                if(buildFilePath2.exists()) {
-                    // This must be what the user meant. Let it continue.
-                    buildFilePath = buildFilePath2;
-                } else {
-                    // neither file exists. So this now really does look like an error.
-                    throw new AbortException("Unable to find build script at "+ buildFilePath);
-                }
-            } else {
-                throw new AbortException("Workspace is not available. Agent may be disconnected.");
-            }
+
+        if (!buildFilePath.exists()) {
+            throw new AbortException("Unable to find build script at "+ buildFilePath);
         }
 
         if(buildFile!=null) {
@@ -288,6 +271,34 @@ public class Ant extends Builder {
                 return base.child(tokens[i+1]);
         }
         return base.child("build.xml");
+    }
+
+    private static FilePath chooseBuildFilePath(AbstractBuild<?,?> build, String buildFile, String targets) throws IOException, InterruptedException {
+
+        FilePath buildFilePath = buildFilePath(build.getModuleRoot(), buildFile, targets);
+
+        // because of the poor choice of getModuleRoot() with CVS/Subversion, people often get confused
+        // with where the build file path is relative to. Now it's too late to change this behavior
+        // due to compatibility issue, but at least we can make this less painful by looking for errors
+        // and diagnosing it nicely. See HUDSON-1782
+
+        // first check if this appears to be a valid relative path from workspace root
+        FilePath workspaceFilePath = build.getWorkspace();
+        if (workspaceFilePath == null) {
+            throw new AbortException("Workspace is not available. Agent may be disconnected.");
+        }
+
+        if(!buildFilePath.exists()) {
+            buildFilePath = buildFilePath(workspaceFilePath, buildFile, targets);
+        }
+
+        // second check if this appears to be a valid absolute path
+        if(!buildFilePath.exists()) {
+            File file = new File(buildFile);
+            buildFilePath = new FilePath(file);
+        }
+
+        return buildFilePath;
     }
 
     @Override
