@@ -145,7 +145,7 @@ public class AntTest extends HudsonTestCase {
         MatrixRun build = project.getItem("AX=is").getLastBuild();
         String log = getLog(build);
         assertTrue("Missing $BUILD_NUMBER: " + log, log.contains("vNUM=1"));
-        assertTrue("Missing $BUILD_ID: " + log, log.contains("vID=2")); // Assuming the year starts with 2!
+        // TODO 1.597+: assertTrue("Missing $BUILD_ID: " + log, log.contains("vID=1"));
         assertTrue("Missing $JOB_NAME: " + log, log.contains(project.getName()));
         // Odd build tag, but it's constructed with getParent().getName() and the parent is the
         // matrix configuration, not the project.. if matrix build tag ever changes, update
