@@ -43,11 +43,14 @@ import hudson.tasks.Ant.AntInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
+import hudson.util.ArgumentListBuilder;
 import hudson.util.DescribableList;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.ExtractResourceSCM;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.SingleFileSCM;
+
+import java.util.List;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -202,5 +205,72 @@ public class AntTest extends HudsonTestCase {
         String log = getLog(build);
         assertTrue("Missing parameter: " + log, log.contains("vFOO=<xml/>"));
         assertTrue("Missing ant property: " + log, log.contains("vBAR=<xml/>"));
+    }
+
+    @Bug(33712)
+    public void testRegressionNoQuote() throws Exception {
+        ArgumentListBuilder builder_1_653 = Ant.toWindowsCommand(toWindowsCommand_1_653(new ArgumentListBuilder("ant.bat", "-Dfoo1=", "-Dfoo2=foovalue")));
+
+        String[] current = builder_1_653.toCommandArray();
+        String[] expected = new String[] { "cmd.exe", "/C", "'\"ant.bat", "-Dfoo1=\"\"", "-Dfoo2=foovalue", "&&", "exit", "%%ERRORLEVEL%%\"'" };
+
+        assertTrue("[653] Assert that has the same number of arguments. current is " + current.length + " and expected is " + expected.length, current.length == expected.length);
+        for (int i=0; i<current.length;i++) {
+            assertEquals("[653] Assert that argument at " + i + ".", expected[i], current[i]);
+        }
+
+        ArgumentListBuilder builder = Ant.toWindowsCommand((new ArgumentListBuilder("ant.bat", "-Dfoo1=", "-Dfoo2=foovalue").toWindowsCommand()));
+
+        current = builder.toCommandArray();
+        expected = new String[] { "cmd.exe", "/C", "\"ant.bat -Dfoo1=\"\" -Dfoo2=foovalue && exit %%ERRORLEVEL%%\"" };
+
+        assertTrue("[652] Assert that has the same number of arguments. current is " + current.length + " and expected is " + expected.length, current.length == expected.length);
+        for (int i=0; i<current.length;i++) {
+            assertEquals("[652] Assert that argument at " + i + ".", expected[i], current[i]);
+        }
+    }
+
+    private static ArgumentListBuilder toWindowsCommand_1_653(ArgumentListBuilder arguments) {
+        List<String> args = arguments.toList();
+        boolean[] masks = arguments.toMaskArray();
+
+        ArgumentListBuilder windowsCommand = new ArgumentListBuilder().add("cmd.exe", "/C");
+        boolean quoted, percent;
+        for (int i = 0; i < args.size(); i++) {
+            StringBuilder quotedArgs = new StringBuilder();
+            String arg = args.get(i);
+            quoted = percent = false;
+            for (int j = 0; j < arg.length(); j++) {
+                char c = arg.charAt(j);
+                if (!quoted && (c == ' ' || c == '*' || c == '?' || c == ',' || c == ';')) {
+                    quoted = startQuoting(quotedArgs, arg, j);
+                }
+                else if (c == '^' || c == '&' || c == '<' || c == '>' || c == '|') {
+                    if (!quoted) quoted = startQuoting(quotedArgs, arg, j);
+                    // quotedArgs.append('^'); See note in javadoc above
+                }
+                else if (c == '"') {
+                    if (!quoted) quoted = startQuoting(quotedArgs, arg, j);
+                    quotedArgs.append('"');
+                }
+                percent = (c == '%');
+                if (quoted) quotedArgs.append(c);
+            }
+            if(i == 0 && quoted) quotedArgs.insert(0, '"'); else if (i == 0 && !quoted) quotedArgs.append('"');
+            if (quoted) quotedArgs.append('"'); else quotedArgs.append(arg);
+
+            windowsCommand.add(quotedArgs, masks[i]);
+        }
+        // (comment copied from old code in hudson.tasks.Ant)
+        // on Windows, executing batch file can't return the correct error code,
+        // so we need to wrap it into cmd.exe.
+        // double %% is needed because we want ERRORLEVEL to be expanded after
+        // batch file executed, not before. This alone shows how broken Windows is...
+        windowsCommand.add("&&").add("exit").add("%%ERRORLEVEL%%\"");
+        return windowsCommand;
+    }
+    private static boolean startQuoting(StringBuilder buf, String arg, int atIndex) {
+        buf.append('"').append(arg.substring(0, atIndex));
+        return true;
     }
 }

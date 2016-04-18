@@ -200,13 +200,7 @@ public class Ant extends Builder {
             env.put("ANT_OPTS",env.expand(antOpts));
 
         if(!launcher.isUnix()) {
-            args = args.toWindowsCommand();
-            // For some reason, ant on windows rejects empty parameters but unix does not.
-            // Add quotes for any empty parameter values:
-            List<String> newArgs = new ArrayList<String>(args.toList());
-            newArgs.set(newArgs.size() - 1, newArgs.get(newArgs.size() - 1).replaceAll(
-                    "(?<= )(-D[^\" ]+)= ", "$1=\"\" "));
-            args = new ArgumentListBuilder(newArgs.toArray(new String[newArgs.size()]));
+            args = toWindowsCommand(args.toWindowsCommand());
         }
 
         long startTime = System.currentTimeMillis();
@@ -234,6 +228,48 @@ public class Ant extends Builder {
             e.printStackTrace( listener.fatalError(errorMessage) );
             return false;
         }
+    }
+
+    /**
+     * Backward compatibility by checking the number of parameters
+     *
+     */
+    protected static ArgumentListBuilder toWindowsCommand(ArgumentListBuilder args) {
+        List<String> arguments = args.toList();
+
+        if (arguments.size() > 3) { // "cmd.exe", "/C", "ant.bat", ...
+            boolean[] masks = args.toMaskArray();
+            // don't know why are missing single quotes.
+
+            args = new ArgumentListBuilder();
+            args.add(arguments.get(0), arguments.get(1)); // "cmd.exe", "/C", ...
+
+            int size = arguments.size();
+            for (int i = 2; i < size; i++) {
+                String arg = arguments.get(i).replaceAll("^(-D[^\" ]+)=$", "$0\"\"");
+
+                if (i == 2) {
+                    arg = "'" + arg;
+                }
+                if (i == size - 1) {
+                    arg =  arg + "'";
+                }
+                if (masks[i]) {
+                    args.addMasked(arg);
+                } else {
+                    args.add(arg);
+                }
+            }
+        } else {
+            // For some reason, ant on windows rejects empty parameters but unix does not.
+            // Add quotes for any empty parameter values:
+            List<String> newArgs = new ArrayList<String>(args.toList());
+            newArgs.set(newArgs.size() - 1, newArgs.get(newArgs.size() - 1).replaceAll(
+                    "(?<= )(-D[^\" ]+)= ", "$1=\"\" "));
+            args = new ArgumentListBuilder(newArgs.toArray(new String[newArgs.size()]));
+        }
+
+        return args;
     }
 
     private static FilePath buildFilePath(FilePath base, String buildFile, String targets) {
