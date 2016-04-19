@@ -247,6 +247,7 @@ public class Ant extends Builder {
         List<String> arguments = args.toList();
 
         if (arguments.size() > 3) { // "cmd.exe", "/C", "ant.bat", ...
+            // branch for core equals or greater than 1.654
             boolean[] masks = args.toMaskArray();
             // don't know why are missing single quotes.
 
@@ -270,6 +271,7 @@ public class Ant extends Builder {
                 }
             }
         } else {
+            // branch for core under 1.653 (backward compatibility)
             // For some reason, ant on windows rejects empty parameters but unix does not.
             // Add quotes for any empty parameter values:
             List<String> newArgs = new ArrayList<String>(args.toList());
