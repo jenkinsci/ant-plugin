@@ -36,9 +36,9 @@ import hudson.model.BuildListener;
 import hudson.model.Computer;
 import hudson.model.EnvironmentSpecific;
 import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import hudson.model.Node;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks._ant.Messages;
 import hudson.tasks._ant.AntConsoleAnnotator;
@@ -51,14 +51,16 @@ import hudson.util.ArgumentListBuilder;
 import hudson.util.VariableResolver;
 import hudson.util.FormValidation;
 import hudson.util.XStream2;
-import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.List;
 import java.util.Collections;
@@ -171,13 +173,19 @@ public class Ant extends Builder {
             // and diagnosing it nicely. See HUDSON-1782
 
             // first check if this appears to be a valid relative path from workspace root
-            FilePath buildFilePath2 = buildFilePath(build.getWorkspace(), buildFile, targets);
-            if(buildFilePath2.exists()) {
-                // This must be what the user meant. Let it continue.
-                buildFilePath = buildFilePath2;
+            FilePath workspaceFilePath = build.getWorkspace();
+            if (workspaceFilePath != null) {
+                FilePath buildFilePath2 = buildFilePath(workspaceFilePath, buildFile, targets);
+                if(buildFilePath2.exists()) {
+                    // This must be what the user meant. Let it continue.
+                    buildFilePath = buildFilePath2;
+                } else {
+                    // neither file exists. So this now really does look like an error.
+                    listener.fatalError("Unable to find build script at "+buildFilePath);
+                    return false;
+                }
             } else {
-                // neither file exists. So this now really does look like an error.
-                listener.fatalError("Unable to find build script at "+buildFilePath);
+                listener.fatalError("Workspace is not available. Agent may be disconnected.");
                 return false;
             }
         }
@@ -283,7 +291,7 @@ public class Ant extends Builder {
         }
 
         public AntInstallation[] getInstallations() {
-            return installations;
+            return Arrays.copyOf(installations, installations.length);
         }
 
         public void setInstallations(AntInstallation... antInstallations) {
@@ -341,7 +349,8 @@ public class Ant extends Builder {
          * Gets the executable path of this Ant on the given target system.
          */
         public String getExecutable(Launcher launcher) throws IOException, InterruptedException {
-            return launcher.getChannel().call(new Callable<String,IOException>() {
+            return launcher.getChannel().call(new MasterToSlaveCallable<String,IOException>() {
+                private static final long serialVersionUID = 906341330603832653L;
                 public String call() throws IOException {
                     File exe = getExeFile();
                     if(exe.exists())
@@ -376,6 +385,7 @@ public class Ant extends Builder {
         }
 
         @Extension
+        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="https://github.com/jenkinsci/jenkins/pull/2094")
         public static class DescriptorImpl extends ToolDescriptor<AntInstallation> {
 
             @Override
