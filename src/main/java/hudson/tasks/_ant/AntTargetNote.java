@@ -31,9 +31,13 @@ import hudson.console.ConsoleAnnotator;
 
 import java.util.regex.Pattern;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Marks the log line "TARGET:" that Ant uses to mark the beginning of the new target.
- * @sine 1.349
+ * @since 1.349
  */
 public final class AntTargetNote extends ConsoleNote {
     public AntTargetNote() {
@@ -57,5 +61,7 @@ public final class AntTargetNote extends ConsoleNote {
         }
     }
 
+    @VisibleForTesting 
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="Visible for testing")
     public static boolean ENABLED = !Boolean.getBoolean(AntTargetNote.class.getName()+".disabled");
 }
