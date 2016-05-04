@@ -150,7 +150,12 @@ public class Ant extends Builder {
         if(ai==null) {
             args.add(launcher.isUnix() ? "ant" : "ant.bat");
         } else {
-            ai = ai.forNode(Computer.currentComputer().getNode(), listener);
+            Node node = Computer.currentComputer().getNode();
+            if (node == null) {
+                listener.fatalError(Messages.Ant_NodeOffline());
+                return false;
+            }
+            ai = ai.forNode(node, listener);
             ai = ai.forEnvironment(env);
             String exe = ai.getExecutable(launcher);
             if (exe==null) {
