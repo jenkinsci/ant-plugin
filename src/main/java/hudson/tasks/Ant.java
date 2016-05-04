@@ -350,7 +350,15 @@ public class Ant extends Builder {
          * Gets the executable path of this Ant on the given target system.
          */
         public String getExecutable(Launcher launcher) throws IOException, InterruptedException {
-            return launcher.getChannel().call(new MyClassy());
+            return launcher.getChannel().call(new MasterToSlaveCallable<String,IOException>() {
+                private static final long serialVersionUID = 906341330603832653L;
+                public String call() throws IOException {
+                    File exe = getExeFile();
+                    if(exe.exists())
+                        return exe.getPath();
+                    return null;
+                }
+            });
         }
 
         private File getExeFile() {
@@ -375,17 +383,6 @@ public class Ant extends Builder {
 
         public AntInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
             return new AntInstallation(getName(), translateFor(node, log), getProperties().toList());
-        }
-
-        private static class MyClassy extends MasterToSlaveCallable<String, IOException> {
-            private static final long serialVersionUID = 906341330603832653L;
-
-            public String call() throws IOException {
-                File exe = super.getExeFile();
-                if(exe.exists())
-                    return exe.getPath();
-                return null;
-            }
         }
 
         @Extension
