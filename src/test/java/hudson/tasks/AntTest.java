@@ -44,6 +44,7 @@ import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
 import hudson.util.DescribableList;
+import jenkins.model.Jenkins;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,7 +98,9 @@ public class AntTest {
      */
     @Test
     public void testGlobalConfigAjax() throws Exception {
-        HtmlPage p = r.createWebClient().goTo("configure");
+        HtmlPage p = Jenkins.getVersion().toString().startsWith("2") ? 
+                     r.createWebClient().goTo("configureTools") : 
+                     r.createWebClient().goTo("configure");
         HtmlForm f = p.getFormByName("config");
         HtmlButton b = r.getButtonByCaption(f, "Add Ant");
         b.click();
