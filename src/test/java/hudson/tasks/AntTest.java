@@ -59,7 +59,6 @@ import org.jvnet.hudson.test.ToolInstallations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -69,6 +68,8 @@ public class AntTest {
     
     @Rule
     public JenkinsRule r = new JenkinsRule();
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
     
     /**
      * Tests the round-tripping of the configuration.
@@ -143,10 +144,7 @@ public class AntTest {
         project.getBuildersList().add(new Ant("foo",null,null,null,null));
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
-        String buildLog = JenkinsRule.getLog(build);
-        assertNotNull(buildLog);
-	System.out.println(buildLog);
-        assertFalse(buildLog.contains("-Dpassword=12345"));
+        r.assertLogNotContains("-Dpassword=12345", build);
     }
 
     @Test
@@ -187,8 +185,6 @@ public class AntTest {
     }
 
     private AntInstallation configureDefaultAnt() throws Exception {
-        TemporaryFolder tmp = new TemporaryFolder();
-        tmp.create();
         return ToolInstallations.configureDefaultAnt(tmp);
     }
 
@@ -217,7 +213,7 @@ public class AntTest {
                    log.matches("(?s).*vFOOHOME=Foo (?!" + homeVar + ").*"));
     }
 
-    @Issue("7108") @Test
+    @Issue("JENKINS-7108") @Test
     public void testEscapeXmlInParameters() throws Exception {
         String antName = configureDefaultAnt().getName();
         FreeStyleProject project = r.createFreeStyleProject();
@@ -227,8 +223,7 @@ public class AntTest {
         project.getBuildersList().add(new Ant("", antName, null, null, "vBAR=<xml/>\n"));
         FreeStyleBuild build = project.scheduleBuild2(0, new UserCause()).get();
         r.assertBuildStatusSuccess(build);
-        String log = JenkinsRule.getLog(build);
-        assertTrue("Missing parameter: " + log, log.contains("vFOO=<xml/>"));
-        assertTrue("Missing ant property: " + log, log.contains("vBAR=<xml/>"));
+        r.assertLogContains("vFOO=<xml/>", build);
+        r.assertLogContains("vBAR=<xml/>", build);
     }
 }

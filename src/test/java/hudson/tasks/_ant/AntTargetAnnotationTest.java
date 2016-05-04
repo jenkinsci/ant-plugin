@@ -22,12 +22,12 @@ public class AntTargetAnnotationTest {
     
     @Rule
     public JenkinsRule r = new JenkinsRule();
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
     
     @Test
     public void test1() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
-        TemporaryFolder tmp = new TemporaryFolder();
-        tmp.create();
         Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(tmp);
         p.getBuildersList().add(new Ant("foo",ant.getName(),null,null,null));
         p.setScm(new SingleFileSCM("build.xml",getClass().getResource("simple-build.xml")));

@@ -23,6 +23,7 @@
  */
 package hudson.tasks;
 
+import hudson.AbortException;
 import hudson.CopyOnWrite;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -152,15 +153,13 @@ public class Ant extends Builder {
         } else {
             Node node = Computer.currentComputer().getNode();
             if (node == null) {
-                listener.fatalError(Messages.Ant_NodeOffline());
-                return false;
+                throw new AbortException(Messages.Ant_NodeOffline());
             }
             ai = ai.forNode(node, listener);
             ai = ai.forEnvironment(env);
             String exe = ai.getExecutable(launcher);
             if (exe==null) {
-                listener.fatalError(Messages.Ant_ExecutableNotFound(ai.getName()));
-                return false;
+                throw new AbortException(Messages.Ant_ExecutableNotFound(ai.getName()));
             }
             args.add(exe);
         }
@@ -186,12 +185,10 @@ public class Ant extends Builder {
                     buildFilePath = buildFilePath2;
                 } else {
                     // neither file exists. So this now really does look like an error.
-                    listener.fatalError("Unable to find build script at "+buildFilePath);
-                    return false;
+                    throw new AbortException("Unable to find build script at "+ buildFilePath);
                 }
             } else {
-                listener.fatalError("Workspace is not available. Agent may be disconnected.");
-                return false;
+                throw new AbortException("Workspace is not available. Agent may be disconnected.");
             }
         }
 
@@ -244,8 +241,7 @@ public class Ant extends Builder {
                     // There are Ant installations configured but the project didn't pick it
                     errorMessage += Messages.Ant_ProjectConfigNeeded();
             }
-            e.printStackTrace( listener.fatalError(errorMessage) );
-            return false;
+            throw new AbortException(errorMessage);
         }
     }
 
@@ -354,15 +350,7 @@ public class Ant extends Builder {
          * Gets the executable path of this Ant on the given target system.
          */
         public String getExecutable(Launcher launcher) throws IOException, InterruptedException {
-            return launcher.getChannel().call(new MasterToSlaveCallable<String,IOException>() {
-                private static final long serialVersionUID = 906341330603832653L;
-                public String call() throws IOException {
-                    File exe = getExeFile();
-                    if(exe.exists())
-                        return exe.getPath();
-                    return null;
-                }
-            });
+            return launcher.getChannel().call(new MyClassy());
         }
 
         private File getExeFile() {
@@ -387,6 +375,17 @@ public class Ant extends Builder {
 
         public AntInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
             return new AntInstallation(getName(), translateFor(node, log), getProperties().toList());
+        }
+
+        private static class MyClassy extends MasterToSlaveCallable<String, IOException> {
+            private static final long serialVersionUID = 906341330603832653L;
+
+            public String call() throws IOException {
+                File exe = super.getExeFile();
+                if(exe.exists())
+                    return exe.getPath();
+                return null;
+            }
         }
 
         @Extension
@@ -460,7 +459,7 @@ public class Ant extends Builder {
         @Extension
         public static final class DescriptorImpl extends DownloadFromUrlInstaller.DescriptorImpl<AntInstaller> {
             public String getDisplayName() {
-                return Messages.InstallFromApache();
+                return Messages.Ant_InstallFromApache();
             }
 
             @Override
