@@ -34,7 +34,7 @@ import java.nio.charset.Charset;
  * Filter {@link OutputStream} that places an annotation that marks Ant target execution.
  * 
  * @author Kohsuke Kawaguchi
- * @sine 1.349
+ * @since 1.349
  */
 public class AntConsoleAnnotator extends LineTransformationOutputStream {
     private final OutputStream out;
