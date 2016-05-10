@@ -258,12 +258,6 @@ public class Ant extends Builder {
             for (int i = 2; i < size; i++) {
                 String arg = arguments.get(i).replaceAll("^(-D[^\" ]+)=$", "$0\"\"");
 
-                if (i == 2) {
-                    arg = "'" + arg;
-                }
-                if (i == size - 1) {
-                    arg =  arg + "'";
-                }
                 if (masks[i]) {
                     args.addMasked(arg);
                 } else {
