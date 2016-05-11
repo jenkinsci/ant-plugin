@@ -7,7 +7,7 @@
   </parent>
 
   <artifactId>ant</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.3</version>
   <packaging>hpi</packaging>
   <name>Ant Plugin</name>
 
@@ -23,6 +23,7 @@
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+    <tag>ant-1.3</tag>
   </scm>
 
   <properties>
