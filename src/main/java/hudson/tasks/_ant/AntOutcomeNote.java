@@ -28,6 +28,7 @@ import hudson.MarkupText;
 import hudson.console.ConsoleAnnotationDescriptor;
 import hudson.console.ConsoleAnnotator;
 import hudson.console.ConsoleNote;
+import org.jenkinsci.Symbol;
 
 /**
  * Annotates the BUILD SUCCESSFUL/FAILED line of the Ant execution.
@@ -47,7 +48,7 @@ public class AntOutcomeNote extends ConsoleNote {
         return null;
     }
 
-    @Extension
+    @Extension @Symbol("antOutcome")
     public static final class DescriptorImpl extends ConsoleAnnotationDescriptor {
         public String getDisplayName() {
             return "Ant build outcome";

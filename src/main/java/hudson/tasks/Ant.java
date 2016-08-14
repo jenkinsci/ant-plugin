@@ -486,7 +486,7 @@ public class Ant extends Builder {
             super(id);
         }
 
-        @Extension
+        @Extension @Symbol("antFromApache")
         public static final class DescriptorImpl extends DownloadFromUrlInstaller.DescriptorImpl<AntInstaller> {
             public String getDisplayName() {
                 return Messages.Ant_InstallFromApache();

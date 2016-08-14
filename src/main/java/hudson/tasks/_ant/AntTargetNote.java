@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jenkinsci.Symbol;
 
 /**
  * Marks the log line "TARGET:" that Ant uses to mark the beginning of the new target.
@@ -54,7 +55,7 @@ public final class AntTargetNote extends ConsoleNote {
         return null;
     }
 
-    @Extension
+    @Extension @Symbol("antTarget")
     public static final class DescriptorImpl extends ConsoleAnnotationDescriptor {
         public String getDisplayName() {
             return "Ant targets";
