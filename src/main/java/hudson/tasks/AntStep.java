@@ -24,16 +24,9 @@
 
 package hudson.tasks;
 
-import com.google.inject.Inject;
 import hudson.Extension;
-import hudson.console.ConsoleLogFilter;
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStep;
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepDescriptor;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.BodyExecutionCallback;
-import org.jenkinsci.plugins.workflow.steps.BodyInvoker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -53,53 +46,6 @@ public class AntStep extends GroovyStep {
 
         @Override public String getFunctionName() {
             return "ant";
-        }
-
-    }
-
-    // TODO could perhaps be moved somewhere generic?
-    public static class ConsoleLogFilterStep extends AbstractStepImpl {
-
-        public final ConsoleLogFilter delegate;
-
-        @DataBoundConstructor public ConsoleLogFilterStep(ConsoleLogFilter delegate) {
-            this.delegate = delegate;
-        }
-
-        public static class Execution extends AbstractStepExecutionImpl {
-
-            @Inject private transient ConsoleLogFilterStep step;
-
-            @Override public boolean start() throws Exception {
-                getContext().newBodyInvoker().withContext(BodyInvoker.mergeConsoleLogFilters(getContext().get(ConsoleLogFilter.class), step.delegate)).withCallback(BodyExecutionCallback.wrap(getContext())).start();
-                return false;
-            }
-
-            @Override public void stop(Throwable cause) throws Exception {
-                // TODO after restart, the body gets a mystery SIGTERM, and this step is considered already finished
-                getContext().onFailure(cause);
-            }
-
-        }
-
-        @Extension public static class DescriptorImpl extends AbstractStepDescriptorImpl {
-
-            public DescriptorImpl() {
-                super(Execution.class);
-            }
-
-            @Override public String getFunctionName() {
-                return "consoleLogFilter";
-            }
-
-            @Override public boolean isAdvanced() {
-                return true;
-            }
-
-            @Override public boolean takesImplicitBlockArgument() {
-                return true;
-            }
-
         }
 
     }
