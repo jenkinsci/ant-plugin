@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.ClassRule;
@@ -43,6 +44,14 @@ public class AntStepTest {
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public JenkinsRule r = new JenkinsRule();
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
+
+    @Test public void configRoundTrip() throws Exception {
+        ToolInstallations.configureDefaultAnt(tmp);
+        AntStep step = new AntStep("compile");
+        step.tool = "default";
+        AntStep step2 = new StepConfigTester(r).configRoundTrip(step);
+        r.assertEqualDataBoundBeans(step, step2);
+    }
 
     @Test public void smokes() throws Exception {
         ToolInstallations.configureDefaultAnt(tmp);
