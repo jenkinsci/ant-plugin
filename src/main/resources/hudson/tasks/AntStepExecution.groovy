@@ -24,13 +24,14 @@
 
 package hudson.tasks
 
+import hudson.tasks._ant.AntConsoleAnnotator
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
 
 public class AntStepExecution extends GroovyStepExecution {
 
     def call() {
         def exe = step.tool != null ? "${tool step.tool}/bin/ant" : 'ant'
-        consoleLogFilter(delegate: hudson.tasks._ant.AntConsoleAnnotator.asConsoleLogFilter()) {
+        consoleLogFilter(delegate: AntConsoleAnnotator.asConsoleLogFilter()) {
             sh "${exe} ${step.targets}"
         }
     }
