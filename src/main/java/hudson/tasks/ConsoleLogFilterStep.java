@@ -46,6 +46,8 @@ public class ConsoleLogFilterStep extends AbstractStepImpl {
 
     public static class Execution extends AbstractStepExecutionImpl {
         
+        private static final long serialVersionUID = 1;
+
         @Inject(optional=true) private transient ConsoleLogFilterStep step;
         
         @Override public boolean start() throws Exception {
