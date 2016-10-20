@@ -31,7 +31,7 @@ public class AntStepExecution extends GroovyStepExecution {
 
     def call() {
         def exe = step.tool != null ? "${tool step.tool}/bin/ant" : 'ant'
-        consoleLogFilter(delegate: AntConsoleAnnotator.asConsoleLogFilter()) {
+        withContext(AntConsoleAnnotator.asConsoleLogFilter()) {
             sh "${exe} ${step.targets}"
         }
     }
