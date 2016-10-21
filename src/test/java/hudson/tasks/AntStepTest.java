@@ -52,8 +52,11 @@ public class AntStepTest {
             @Override public void evaluate() throws Throwable {
                 ToolInstallations.configureDefaultAnt(tmp);
                 AntStep step = new AntStep("compile");
-                step.tool = "default";
+                step.setTool("default");
                 AntStep step2 = new StepConfigTester(r.j).configRoundTrip(step);
+                r.j.assertEqualDataBoundBeans(step, step2);
+                step.setOpts("-Dwhatever");
+                step2 = new StepConfigTester(r.j).configRoundTrip(step);
                 r.j.assertEqualDataBoundBeans(step, step2);
             }
         });
@@ -68,6 +71,8 @@ public class AntStepTest {
                 r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntStepTest.class.getResource("_ant/simple-build.xml"));
                 p.setDefinition(new CpsFlowDefinition("node {ant targets: 'foo', tool: 'default'}", true));
                 WorkflowRun b = r.j.buildAndAssertSuccess(p);
+                // TODO passes locally, fails in jenkins.ci: AntConsoleAnnotator processes AntOutcomeNote but not AntTargetNote
+                // (perhaps because it seems to have set ANT_HOME=/opt/ant/latest? yet the output looks right)
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>foo</b>");
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>bar</b>");
                 JenkinsRule.WebClient wc = r.j.createWebClient();
@@ -99,6 +104,19 @@ public class AntStepTest {
                 r.j.waitForCompletion(b);
                 r.j.assertLogContains("after signal created", b);
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>main</b>");
+            }
+        });
+    }
+
+    @Test public void opts() throws Exception {
+        r.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                ToolInstallations.configureDefaultAnt(tmp);
+                WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
+                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntStepTest.class.getResource("_ant/simple-build.xml"));
+                p.setDefinition(new CpsFlowDefinition("node {ant targets: 'foo', tool: 'default', opts: '-showversion'}", true));
+                WorkflowRun b = r.j.buildAndAssertSuccess(p);
+                r.j.assertLogContains("java version \"", b);
             }
         });
     }

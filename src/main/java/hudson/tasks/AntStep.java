@@ -25,6 +25,8 @@
 package hudson.tasks;
 
 import hudson.Extension;
+import hudson.Util;
+import javax.annotation.CheckForNull;
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStep;
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -32,20 +34,47 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class AntStep extends GroovyStep {
 
-    public final String targets;
-    @DataBoundSetter public String tool;
-    @DataBoundSetter public String opts;
-    @DataBoundSetter public String buildFile;
-    @DataBoundSetter public String properties;
+    private final String targets;
+    private String tool;
+    private String opts;
 
     @DataBoundConstructor public AntStep(String targets) {
-        this.targets = targets;
+        this.targets = fixEmptyMultiline(targets);
+    }
+
+    public String getTargets() {
+        return targets;
+    }
+
+    public String getTool() {
+        return tool;
+    }
+
+    @DataBoundSetter public void setTool(String tool) {
+        this.tool = Util.fixEmpty(tool);
+    }
+
+    public String getOpts() {
+        return opts;
+    }
+
+    @DataBoundSetter public void setOpts(String opts) {
+        this.opts = fixEmptyMultiline(opts);
+    }
+
+    private static @CheckForNull String fixEmptyMultiline(@CheckForNull String s) {
+        s = Util.fixEmpty(s);
+        return s != null ? s.replaceAll("\\s+", " ").trim() : null;
     }
 
     @Extension public static class DescriptorImpl extends GroovyStepDescriptor {
 
         @Override public String getFunctionName() {
             return "ant";
+        }
+
+        @Override public String getDisplayName() {
+            return hudson.tasks._ant.Messages.Ant_DisplayName();
         }
 
     }

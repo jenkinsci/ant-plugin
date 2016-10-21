@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package hudson.tasks.AntStep;
+f=namespace(lib.FormTagLib)
 
-package hudson.tasks
+def installations = app.getDescriptorByType(hudson.tasks.Ant.DescriptorImpl).installations
 
-import hudson.tasks._ant.AntConsoleAnnotator
-import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
-
-public class AntStepExecution extends GroovyStepExecution {
-
-    def call() {
-        def exe = step.tool != null ? "${tool step.tool}/bin/ant" : 'ant'
-        withContext(AntConsoleAnnotator.asConsoleLogFilter()) {
-            def run = {sh "'${exe}'${step.targets ? ' ' + step.targets : ''}"}
-            step.opts ? withEnv(["ANT_OPTS=${step.opts}"]) {run()} : run()
+if (installations.length != 0) {
+    f.entry(title:_("Ant Version")) {
+        select(class:"setting-input",name:"ant.tool") {
+            option(value:"", _("Default"))
+            installations.each {
+                f.option(selected:it.name==instance?.tool, value:it.name, it.name)
+            }
         }
     }
+}
 
+f.entry(title:_("Targets"),field:"targets") {
+    f.expandableTextbox()
+}
+
+f.advanced {
+    f.entry(title:_("Java Options"),field:"opts") {
+        f.expandableTextbox()
+    }
 }
