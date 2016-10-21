@@ -30,9 +30,12 @@ import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
 public class AntStepExecution extends GroovyStepExecution {
 
     def call() {
-        def exe = step.tool != null ? "${tool step.tool}/bin/ant" : 'ant'
+        def unix = isUnix()
+        def exe = step.tool != null ? (unix ? "${tool step.tool}/bin/ant" : "${tool step.tool}\\bin\\ant.bat") : 'ant'
         withContext(AntConsoleAnnotator.asConsoleLogFilter()) {
-            def run = {sh "'${exe}'${step.targets ? ' ' + step.targets : ''}"}
+            // TODO some complicated logic in Ant.toWindowsCommand with no apparent test coverage; keeping it simple for now
+            // if necessary could factor heavy logic into AntStep: String createCommandLine(@CheckForNull String toolHome, boolean unix)
+            def run = {unix ? sh("'${exe}'${step.targets ? ' ' + step.targets : ''}") : bat("\"${exe}\"${step.targets ? ' ' + step.targets : ''}")}
             step.opts ? withEnv(["ANT_OPTS=${step.opts}"]) {run()} : run()
         }
     }
