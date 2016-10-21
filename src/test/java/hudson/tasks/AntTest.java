@@ -351,7 +351,7 @@ public class AntTest {
         build.getLogText().writeHtmlTo(0, w);
         return w.toString();
     }
-    private static void assertHtmlLogContains(Run<?, ?> build, String text) throws IOException {
+    static void assertHtmlLogContains(Run<?, ?> build, String text) throws IOException {
         assertThat(getHtmlLog(build), containsString(text));
     }
     private static void assertHtmlLogNotContains(Run<?, ?> build, String text) throws IOException {

@@ -60,9 +60,10 @@ public class AntStepTest {
         r.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(getClass().getResource("_ant/simple-build.xml"));
         p.setDefinition(new CpsFlowDefinition("node {ant targets: 'foo', tool: 'default'}", true));
         WorkflowRun b = r.buildAndAssertSuccess(p);
+        AntTest.assertHtmlLogContains(b, "<b class=ant-target>foo</b>");
+        AntTest.assertHtmlLogContains(b, "<b class=ant-target>bar</b>");
         JenkinsRule.WebClient wc = r.createWebClient();
         HtmlPage c = wc.getPage(b, "console");
-        System.out.println(c.asText());
         DomElement o = c.getElementById("console-outline");
         assertEquals(2, o.getByXPath(".//LI").size());
     }
