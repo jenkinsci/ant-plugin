@@ -53,6 +53,7 @@ public class AntStepTest {
         r.assertEqualDataBoundBeans(step, step2);
     }
 
+    /** @see hudson.tasks._ant.AntTargetAnnotationTest#test1 */
     @Test public void smokes() throws Exception {
         ToolInstallations.configureDefaultAnt(tmp);
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
