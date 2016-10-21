@@ -29,13 +29,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.Functions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
-import hudson.matrix.MatrixRun;
 import hudson.matrix.MatrixProject;
+import hudson.matrix.MatrixRun;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.PasswordParameterDefinition;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
 import hudson.tasks.Ant.AntInstallation;
 import hudson.tasks.Ant.AntInstallation.DescriptorImpl;
@@ -43,12 +44,14 @@ import hudson.tasks.Ant.AntInstaller;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
-import hudson.util.ArgumentListBuilder;
 import hudson.util.DescribableList;
 import hudson.util.VersionNumber;
+import java.io.IOException;
+import java.io.StringWriter;
 import jenkins.model.Jenkins;
-
 import org.apache.commons.lang.SystemUtils;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -58,14 +61,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.ToolInstallations;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -247,11 +242,12 @@ public class AntTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
        
         assertEquals(Result.SUCCESS, build.getResult());
-        r.assertLogContains("0mclean", build);
-        r.assertLogContains("0mcompile", build);
-        r.assertLogNotContains("0mjar", build);
-        r.assertLogNotContains("0mrun", build);
-        r.assertLogNotContains("0mmain", build);
+
+        assertHtmlLogContains(build, "<b class=ant-target>clean</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>compile</b>");
+        assertHtmlLogNotContains(build, "<b class=ant-target>jar</b>");
+        assertHtmlLogNotContains(build, "<b class=ant-target>run</b>");
+        assertHtmlLogNotContains(build, "<b class=ant-target>main</b>");
     }
     
     @Test
@@ -261,11 +257,12 @@ public class AntTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
        
         assertEquals(Result.SUCCESS, build.getResult());
-        r.assertLogContains("0mclean", build);
-        r.assertLogContains("0mcompile", build);
-        r.assertLogContains("0mjar", build);
-        r.assertLogContains("0mrun", build);
-        r.assertLogContains("0mmain", build);
+
+        assertHtmlLogContains(build, "<b class=ant-target>clean</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>compile</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>jar</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>run</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>main</b>");
     }
     
     @Test
@@ -297,11 +294,12 @@ public class AntTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
        
         assertEquals(Result.SUCCESS, build.getResult());
-        r.assertLogContains("0mclean-custom", build);
-        r.assertLogContains("0mcompile-custom", build);
-        r.assertLogContains("0mjar-custom", build);
-        r.assertLogContains("0mrun-custom", build);
-        r.assertLogContains("0mmain-custom", build);
+
+        assertHtmlLogContains(build, "<b class=ant-target>clean-custom</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>compile-custom</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>jar-custom</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>run-custom</b>");
+        assertHtmlLogContains(build, "<b class=ant-target>main-custom</b>");
     }
 
     @Test
@@ -346,4 +344,18 @@ public class AntTest {
         project.getBuildersList().add(new Ant(targets, antName, ops, buildFile, properties));
         return project;
     }
+
+    // TODO consider inclusion in JenkinsRule; can use WebClient to obtain …/console but is slow and contains other junk
+    private static String getHtmlLog(Run<?, ?> build) throws IOException {
+        StringWriter w = new StringWriter();
+        build.getLogText().writeHtmlTo(0, w);
+        return w.toString();
+    }
+    private static void assertHtmlLogContains(Run<?, ?> build, String text) throws IOException {
+        assertThat(getHtmlLog(build), containsString(text));
+    }
+    private static void assertHtmlLogNotContains(Run<?, ?> build, String text) throws IOException {
+        assertThat(getHtmlLog(build), not(containsString(text)));
+    }
+
 }
