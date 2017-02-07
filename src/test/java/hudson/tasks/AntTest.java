@@ -31,13 +31,16 @@ import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.MatrixRun;
+import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.PasswordParameterDefinition;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
 import hudson.tasks.Ant.AntInstallation;
 import hudson.tasks.Ant.AntInstallation.DescriptorImpl;
 import hudson.tasks.Ant.AntInstaller;
@@ -48,6 +51,7 @@ import hudson.util.DescribableList;
 import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
@@ -320,6 +324,48 @@ public class AntTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get();
         
         assertEquals(Result.SUCCESS, build.getResult());
+    }
+
+    @Test
+    public void propertyReplacedByVariable() throws Exception {
+        testVariableReplaced("x");
+    }
+
+    @Test
+    @Issue("JENKINS-41801")
+    public void propertyReplacedByEmptyBuildParameter() throws Exception {
+        testVariableReplaced("");
+    }
+
+    private void testVariableReplaced(String variableValue) throws Exception {
+        FreeStyleProject project = createSimpleAntProject("", null, "build-properties.xml", "testProperty=$variable");
+
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(),
+                new ParametersAction(new StringParameterValue("variable", variableValue))).get();
+
+        assertEquals(Result.SUCCESS, build.getResult());
+        List<String> logs = build.getLog(Integer.MAX_VALUE);
+
+        // Find ant command line in logs
+        String commandLineLine = null;
+        for (int i = 0; i < logs.size(); i++) {
+            String line = logs.get(i);
+
+            if (line.contains("ant") && line.contains("build-properties.xml")
+                    && line.contains("-DtestProperty=")) {
+                commandLineLine = line;
+                break;
+            }
+        }
+
+        assertNotNull("Unable to find ant command line", commandLineLine);
+
+        // space so we can look for empty value
+        commandLineLine += " ";
+
+        // Check value is expected (with and without quotes)
+        assertTrue("-DtestProperty param not '" + variableValue + "': " + commandLineLine,
+                commandLineLine.contains("-DtestProperty=\"" + variableValue + "\" ") || commandLineLine.contains("-DtestProperty=" + variableValue + " "));
     }
 
     /**

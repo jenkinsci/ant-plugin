@@ -65,6 +65,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.List;
+import java.util.Map;
 import java.util.Collections;
 import java.util.Set;
 
@@ -146,8 +147,17 @@ public class Ant extends Builder {
         ArgumentListBuilder args = new ArgumentListBuilder();
 
         EnvVars env = build.getEnvironment(listener);
-        env.overrideAll(build.getBuildVariables());
-        
+
+        // Allow empty build parameters to be used in property replacements.
+        // The env.override/overrideAll methods remove the propery if it's an empty string.
+        for (Map.Entry<String, String> e : build.getBuildVariables().entrySet()) {
+            if (e.getValue() != null && e.getValue().length() == 0) {
+                env.put(e.getKey(), e.getValue());
+            } else {
+                env.override(e.getKey(), e.getValue());
+            }
+        }
+
         AntInstallation ai = getAnt();
         if(ai==null) {
             args.add(launcher.isUnix() ? "ant" : "ant.bat");
