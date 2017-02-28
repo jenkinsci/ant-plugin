@@ -26,6 +26,7 @@ package hudson.tasks;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.EnvVars;
 import hudson.Functions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
@@ -122,6 +123,12 @@ public class AntTest {
         AntInstallation[] l = r.get(DescriptorImpl.class).getInstallations();
         assertEquals(1,l.length);
         r.assertEqualBeans(l[0],new AntInstallation("myAnt","/tmp/foo", JenkinsRule.NO_PROPERTIES),"name,home");
+
+        // Verify that PATH+ANT is set.
+        EnvVars envVars = new EnvVars();
+        l[0].buildEnvVars(envVars);
+        assertTrue(envVars.containsKey("PATH+ANT"));
+        assertEquals(l[0].getHome() + "/bin", envVars.get("PATH+ANT"));
 
         // by default we should get the auto installer
         DescribableList<ToolProperty<?>,ToolPropertyDescriptor> props = l[0].getProperties();
