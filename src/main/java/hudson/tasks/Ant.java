@@ -375,8 +375,10 @@ public class Ant extends Builder {
             return getHome();
         }
 
+        @Override
         public void buildEnvVars(EnvVars env) {
             env.put("ANT_HOME",getHome());
+            env.put("PATH+ANT", getHome() + "/bin");
         }
 
         /**
