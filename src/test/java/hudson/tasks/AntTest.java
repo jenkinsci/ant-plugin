@@ -347,6 +347,11 @@ public class AntTest {
     private void testVariableReplaced(String variableValue) throws Exception {
         FreeStyleProject project = createSimpleAntProject("", null, "build-properties.xml", "testProperty=$variable");
 
+        //SECURITY-170
+        ParameterDefinition paramDef = new StringParameterDefinition("variable", "");
+        ParametersDefinitionProperty paramsDef = new ParametersDefinitionProperty(paramDef);
+        project.addProperty(paramsDef);
+
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(),
                 new ParametersAction(new StringParameterValue("variable", variableValue))).get();
 
