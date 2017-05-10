@@ -35,6 +35,7 @@ import hudson.matrix.MatrixRun;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParameterDefinition;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.PasswordParameterDefinition;
@@ -346,6 +347,11 @@ public class AntTest {
 
     private void testVariableReplaced(String variableValue) throws Exception {
         FreeStyleProject project = createSimpleAntProject("", null, "build-properties.xml", "testProperty=$variable");
+
+        //SECURITY-170
+        ParameterDefinition paramDef = new StringParameterDefinition("variable", "");
+        ParametersDefinitionProperty paramsDef = new ParametersDefinitionProperty(paramDef);
+        project.addProperty(paramsDef);
 
         FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(),
                 new ParametersAction(new StringParameterValue("variable", variableValue))).get();
