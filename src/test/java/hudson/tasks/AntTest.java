@@ -46,6 +46,7 @@ import hudson.model.StringParameterValue;
 import hudson.tasks.Ant.AntInstallation;
 import hudson.tasks.Ant.AntInstallation.DescriptorImpl;
 import hudson.tasks.Ant.AntInstaller;
+import hudson.tasks._ant.AntTargetNote;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
@@ -401,6 +402,8 @@ public class AntTest {
         FreeStyleProject project = r.createFreeStyleProject();
         project.setScm(new ExtractResourceSCM(getClass().getResource("sample-helloworld-ant.zip")));
         project.getBuildersList().add(new Ant(targets, antName, ops, buildFile, properties));
+        //Make sure that state is the expected when running secuentially, other tests change this variable
+        AntTargetNote.ENABLED = true;
         return project;
     }
 
