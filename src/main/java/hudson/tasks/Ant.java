@@ -211,14 +211,21 @@ public class Ant extends Builder {
 
         args.addKeyValuePairs("-D",build.getBuildVariables(),sensitiveVars);
 
-        args.addKeyValuePairsFromPropertyString("-D",properties,vr,sensitiveVars);
+        //[cs] to support expandableTextboxes, single-liner properties need to be converted into
+        // newline separated properties.
+        String properties2 = properties;
+        if (!properties.contains("\n")) {
+        	properties2 = properties.replaceAll(" +", "\n");
+        }
+        args.addKeyValuePairsFromPropertyString("-D",properties2,vr,sensitiveVars);
 
         args.addTokenized(targets.replaceAll("[\t\r\n]+"," "));
 
         if(ai!=null)
             ai.buildEnvVars(env);
+        //[cs] replace tab/newlines with spaces to allow antopts to work with expandableTextboxes.
         if(antOpts!=null)
-            env.put("ANT_OPTS",env.expand(antOpts));
+            env.put("ANT_OPTS",env.expand(antOpts.replaceAll("[\t\r\n]+"," ")));
 
         if(!launcher.isUnix()) {
             args = toWindowsCommand(args.toWindowsCommand());
