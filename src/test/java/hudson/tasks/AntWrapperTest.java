@@ -57,7 +57,7 @@ public class AntWrapperTest {
                 p = r.j.configRoundtrip(p);
                 AntWrapper aw2 = p.getBuildWrappersList().get(AntWrapper.class);
                 r.j.assertEqualDataBoundBeans(aw1, aw2);
-                aw2.setInstallation("default");
+                aw2.setInstallation(installation.getName());
                 p = r.j.configRoundtrip(p);
                 AntWrapper aw3 = p.getBuildWrappersList().get(AntWrapper.class);
                 r.j.assertEqualDataBoundBeans(aw2, aw3);
