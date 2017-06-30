@@ -21,28 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package hudson.tasks.AntStep;
+package hudson.tasks.AntWrapper;
 f=namespace(lib.FormTagLib)
 
 def installations = app.getDescriptorByType(hudson.tasks.Ant.DescriptorImpl).installations
-
 if (installations.length != 0) {
-    f.entry(title:_("Ant Version")) {
-        select(class:"setting-input",name:"ant.tool") {
-            option(value:"", _("Default"))
+    f.entry(title: _('Ant Version')) {
+        select(class: 'setting-input', name: 'ant.installation') {
+            option(value: '', _('Default'))
             installations.each {
-                f.option(selected:it.name==instance?.tool, value:it.name, it.name)
+                f.option(selected: it.name == instance?.installation, value: it.name, it.name)
             }
         }
     }
 }
 
-f.entry(title:_("Targets"),field:"targets") {
-    f.expandableTextbox()
-}
-
-f.advanced {
-    f.entry(title:_("Java Options"),field:"opts") {
-        f.expandableTextbox()
+def jdks = app.getDescriptorByType(hudson.model.JDK.DescriptorImpl).installations
+if (jdks.length != 0) {
+    f.entry(title: _('JDK')) {
+        select(class: 'setting-input', name: 'ant.jdk') {
+            option(value: '', _('Default'))
+            jdks.each {
+                f.option(selected: it.name == instance?.jdk, value: it.name, it.name)
+            }
+        }
     }
 }

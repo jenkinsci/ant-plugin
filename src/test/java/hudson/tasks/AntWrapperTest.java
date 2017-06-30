@@ -26,10 +26,10 @@ package hudson.tasks;
 
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.model.FreeStyleProject;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.ClassRule;
@@ -41,7 +41,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
-public class AntStepTest {
+public class AntWrapperTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
@@ -50,14 +50,17 @@ public class AntStepTest {
     @Test public void configRoundTrip() throws Exception {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                ToolInstallations.configureDefaultAnt(tmp);
-                AntStep step = new AntStep("compile");
-                step.setTool("default");
-                AntStep step2 = new StepConfigTester(r.j).configRoundTrip(step);
-                r.j.assertEqualDataBoundBeans(step, step2);
-                step.setOpts("-Dwhatever");
-                step2 = new StepConfigTester(r.j).configRoundTrip(step);
-                r.j.assertEqualDataBoundBeans(step, step2);
+                Ant.AntInstallation installation = ToolInstallations.configureDefaultAnt(tmp);
+                FreeStyleProject p = r.j.createFreeStyleProject(); // no configRoundTrip(BuildWrapper) it seems
+                AntWrapper aw1 = new AntWrapper();
+                p.getBuildWrappersList().add(aw1);
+                p = r.j.configRoundtrip(p);
+                AntWrapper aw2 = p.getBuildWrappersList().get(AntWrapper.class);
+                r.j.assertEqualDataBoundBeans(aw1, aw2);
+                aw2.setInstallation("default");
+                p = r.j.configRoundtrip(p);
+                AntWrapper aw3 = p.getBuildWrappersList().get(AntWrapper.class);
+                r.j.assertEqualDataBoundBeans(aw2, aw3);
             }
         });
     }
@@ -66,10 +69,10 @@ public class AntStepTest {
     @Test public void smokes() throws Exception {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
-                ToolInstallations.configureDefaultAnt(tmp);
+                ToolInstallations.configureDefaultAnt(tmp); // TODO could instead use DockerRule<JavaContainer> to run against a specified JDK location
                 WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
-                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntStepTest.class.getResource("_ant/simple-build.xml"));
-                p.setDefinition(new CpsFlowDefinition("node {ant targets: 'foo', tool: 'default'}", true));
+                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/simple-build.xml"));
+                p.setDefinition(new CpsFlowDefinition("node {withAnt(installation: 'default') {if (isUnix()) {sh 'ant foo'} else {bat 'ant foo'}}}", true));
                 WorkflowRun b = r.j.buildAndAssertSuccess(p);
                 // TODO passes locally, fails in jenkins.ci: AntConsoleAnnotator processes AntOutcomeNote but not AntTargetNote
                 // (perhaps because it seems to have set ANT_HOME=/opt/ant/latest? yet the output looks right)
@@ -88,8 +91,8 @@ public class AntStepTest {
             @Override public void evaluate() throws Throwable {
                 ToolInstallations.configureDefaultAnt(tmp);
                 WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
-                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntStepTest.class.getResource("_ant/pauses.xml"));
-                p.setDefinition(new CpsFlowDefinition("node {ant tool: 'default'}", true));
+                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/pauses.xml"));
+                p.setDefinition(new CpsFlowDefinition("node {withAnt(installation: 'default') {if (isUnix()) {sh 'ant'} else {bat 'ant'}}}", true));
                 WorkflowRun b = p.scheduleBuild2(0).waitForStart();
                 r.j.waitForMessage("before signal created", b);
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>prep</b>");
@@ -104,19 +107,6 @@ public class AntStepTest {
                 r.j.waitForCompletion(b);
                 r.j.assertLogContains("after signal created", b);
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>main</b>");
-            }
-        });
-    }
-
-    @Test public void opts() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                ToolInstallations.configureDefaultAnt(tmp);
-                WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
-                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntStepTest.class.getResource("_ant/simple-build.xml"));
-                p.setDefinition(new CpsFlowDefinition("node {ant targets: 'foo', tool: 'default', opts: '-showversion'}", true));
-                WorkflowRun b = r.j.buildAndAssertSuccess(p);
-                r.j.assertLogContains("java version \"", b);
             }
         });
     }
