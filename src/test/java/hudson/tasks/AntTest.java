@@ -26,21 +26,27 @@ package hudson.tasks;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.EnvVars;
 import hudson.Functions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.MatrixRun;
+import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.PasswordParameterDefinition;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
 import hudson.tasks.Ant.AntInstallation;
 import hudson.tasks.Ant.AntInstallation.DescriptorImpl;
 import hudson.tasks.Ant.AntInstaller;
+import hudson.tasks._ant.AntTargetNote;
 import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
@@ -48,6 +54,7 @@ import hudson.util.DescribableList;
 import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
@@ -122,6 +129,12 @@ public class AntTest {
         AntInstallation[] l = r.get(DescriptorImpl.class).getInstallations();
         assertEquals(1,l.length);
         r.assertEqualBeans(l[0],new AntInstallation("myAnt","/tmp/foo", JenkinsRule.NO_PROPERTIES),"name,home");
+
+        // Verify that PATH+ANT is set.
+        EnvVars envVars = new EnvVars();
+        l[0].buildEnvVars(envVars);
+        assertTrue(envVars.containsKey("PATH+ANT"));
+        assertEquals(l[0].getHome() + "/bin", envVars.get("PATH+ANT"));
 
         // by default we should get the auto installer
         DescribableList<ToolProperty<?>,ToolPropertyDescriptor> props = l[0].getProperties();
@@ -322,6 +335,53 @@ public class AntTest {
         assertEquals(Result.SUCCESS, build.getResult());
     }
 
+    @Test
+    public void propertyReplacedByVariable() throws Exception {
+        testVariableReplaced("x");
+    }
+
+    @Test
+    @Issue("JENKINS-41801")
+    public void propertyReplacedByEmptyBuildParameter() throws Exception {
+        testVariableReplaced("");
+    }
+
+    private void testVariableReplaced(String variableValue) throws Exception {
+        FreeStyleProject project = createSimpleAntProject("", null, "build-properties.xml", "testProperty=$variable");
+
+        //SECURITY-170
+        ParameterDefinition paramDef = new StringParameterDefinition("variable", "");
+        ParametersDefinitionProperty paramsDef = new ParametersDefinitionProperty(paramDef);
+        project.addProperty(paramsDef);
+
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(),
+                new ParametersAction(new StringParameterValue("variable", variableValue))).get();
+
+        assertEquals(Result.SUCCESS, build.getResult());
+        List<String> logs = build.getLog(Integer.MAX_VALUE);
+
+        // Find ant command line in logs
+        String commandLineLine = null;
+        for (int i = 0; i < logs.size(); i++) {
+            String line = logs.get(i);
+
+            if (line.contains("ant") && line.contains("build-properties.xml")
+                    && line.contains("-DtestProperty=")) {
+                commandLineLine = line;
+                break;
+            }
+        }
+
+        assertNotNull("Unable to find ant command line", commandLineLine);
+
+        // space so we can look for empty value
+        commandLineLine += " ";
+
+        // Check value is expected (with and without quotes)
+        assertTrue("-DtestProperty param not '" + variableValue + "': " + commandLineLine,
+                commandLineLine.contains("-DtestProperty=\"" + variableValue + "\" ") || commandLineLine.contains("-DtestProperty=" + variableValue + " "));
+    }
+
     /**
      * Creates a FreeStyleProject with an Ant build step with parameters passed as parameter.
      * The Project to use is always the same (sample-helloworld-ant.zip)
@@ -342,6 +402,8 @@ public class AntTest {
         FreeStyleProject project = r.createFreeStyleProject();
         project.setScm(new ExtractResourceSCM(getClass().getResource("sample-helloworld-ant.zip")));
         project.getBuildersList().add(new Ant(targets, antName, ops, buildFile, properties));
+        //Make sure that state is the expected when running secuentially, other tests change this variable
+        AntTargetNote.ENABLED = true;
         return project;
     }
 

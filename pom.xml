@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.19</version>
-    <relativePath/>
+    <version>2.28</version>
+    <relativePath />
   </parent>
 
   <artifactId>ant</artifactId>
-  <version>1.5-SNAPSHOT</version>
+  <version>1.6-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Ant Plugin</name>
   <description>Adds Apache Ant support to Jenkins</description>
@@ -29,9 +29,8 @@
 
   <properties>
     <jenkins.version>1.642.3</jenkins.version>
-    <hpi-plugin.version>1.121</hpi-plugin.version>
   </properties>
-  
+
   <dependencies>
     <dependency>
       <groupId>com.github.jenkinsci</groupId> <!-- TODO https://github.com/jenkinsci/workflow-cps-plugin/pull/59 -->
@@ -80,7 +79,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
+
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -106,4 +105,4 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-</project>  
+</project>
