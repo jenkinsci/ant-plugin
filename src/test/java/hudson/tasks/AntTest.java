@@ -59,6 +59,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -209,8 +210,10 @@ public class AntTest {
         return ToolInstallations.configureDefaultAnt(tmp);
     }
 
+    @Issue("JENKINS-7442")
     @Test
     public void testParameterExpansionByShell() throws Exception {
+        assumeFalse("TODO ant.bat seems to be leaving %HOME% unevaluated; unclear what the expected behavior is", Functions.isWindows());
         String antName = configureDefaultAnt().getName();
         FreeStyleProject project = r.createFreeStyleProject();
         project.setScm(new ExtractResourceSCM(getClass().getResource("ant-job.zip")));
