@@ -1,0 +1,10 @@
+<project default="main">
+  <target name="prep">
+    <echo>before signal created</echo>
+    <waitfor>
+      <available file="signal"/>
+    </waitfor>
+    <echo>after signal created</echo>
+  </target>
+  <target name="main" depends="prep"/>
+</project>

@@ -23,10 +23,14 @@
  */
 package hudson.tasks._ant;
 
+import com.google.common.base.Charsets;
+import hudson.console.ConsoleLogFilter;
 import hudson.console.LineTransformationOutputStream;
+import hudson.model.Run;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
@@ -74,6 +78,16 @@ public class AntConsoleAnnotator extends LineTransformationOutputStream {
     public void close() throws IOException {
         super.close();
         out.close();
+    }
+
+    public static ConsoleLogFilter asConsoleLogFilter() {
+        return new ConsoleLogFilterImpl();
+    }
+    private static class ConsoleLogFilterImpl extends ConsoleLogFilter implements Serializable {
+        private static final long serialVersionUID = 1;
+        @Override public OutputStream decorateLogger(Run build, OutputStream logger) throws IOException, InterruptedException {
+            return new AntConsoleAnnotator(logger, Charsets.UTF_8);
+        }
     }
 
 }
