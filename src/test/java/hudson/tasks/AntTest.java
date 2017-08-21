@@ -36,6 +36,7 @@ import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.PasswordParameterDefinition;
@@ -54,7 +55,11 @@ import hudson.util.DescribableList;
 import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
@@ -356,9 +361,12 @@ public class AntTest {
         ParameterDefinition paramDef = new StringParameterDefinition("variable", "");
         ParametersDefinitionProperty paramsDef = new ParametersDefinitionProperty(paramDef);
         project.addProperty(paramsDef);
-
-        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(),
-                new ParametersAction(new StringParameterValue("variable", variableValue))).get();
+        
+        Set<String> safeParams = new HashSet<String>();
+        safeParams.add("variable");
+        ParametersAction parameters = new ParametersAction(Arrays.asList(new ParameterValue[] { new StringParameterValue("variable", variableValue) }), safeParams);
+        
+        FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), parameters).get();
 
         assertEquals(Result.SUCCESS, build.getResult());
         List<String> logs = build.getLog(Integer.MAX_VALUE);
