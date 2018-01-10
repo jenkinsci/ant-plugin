@@ -29,8 +29,10 @@ if (installations.length != 0) {
     f.entry(title: _('Ant Version')) {
         select(class: 'setting-input', name: 'ant.installation') {
             option(value: '', _('Default'))
-            installations.each {
-                f.option(selected: it.name == instance?.installation, value: it.name, it.name)
+            installations.each { install ->
+                f.option(selected: install.name == instance?.installation, value: install.name){
+                    text(install.name)
+                }
             }
         }
     }
@@ -41,8 +43,10 @@ if (jdks.length != 0) {
     f.entry(title: _('JDK')) {
         select(class: 'setting-input', name: 'ant.jdk') {
             option(value: '', _('Default'))
-            jdks.each {
-                f.option(selected: it.name == instance?.jdk, value: it.name, it.name)
+            jdks.each { install ->
+                f.option(selected: install.name == instance?.jdk, value: install.name){
+                    text(install.name)
+                }
             }
         }
     }

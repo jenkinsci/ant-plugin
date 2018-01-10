@@ -28,8 +28,10 @@ if (descriptor.installations.length != 0) {
     f.entry(title:_("Ant Version")) {
         select(class:"setting-input",name:"ant.antName") {
             option(value:"(Default)", _("Default"))
-            descriptor.installations.each {
-                f.option(selected:it.name==instance?.ant?.name, value:it.name, it.name)
+            descriptor.installations.each { install ->
+                f.option(selected:install.name==instance?.ant?.name, value:install.name){
+                    text(install.name)
+                }
             }
         }
     }
