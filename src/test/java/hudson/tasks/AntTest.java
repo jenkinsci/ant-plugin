@@ -65,6 +65,8 @@ import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -152,6 +154,9 @@ public class AntTest {
 
     @Test
     public void testSensitiveParameters() throws Exception {
+        //TODO perhaps better way to check the requirement
+        assumeTrue("Ant.bat is not automatically present on Windows", !Functions.isWindows());
+        
         FreeStyleProject project = r.createFreeStyleProject();
         ParametersDefinitionProperty pdb = new ParametersDefinitionProperty(
                 new StringParameterDefinition("string", "defaultValue", "string description"),
