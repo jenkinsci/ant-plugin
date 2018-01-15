@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>ant</artifactId>
-  <version>1.8-SNAPSHOT</version>
+  <version>1.8</version>
   <packaging>hpi</packaging>
   <name>Ant Plugin</name>
   <description>Adds Apache Ant support to Jenkins</description>
@@ -24,7 +24,7 @@
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>ant-1.8</tag>
   </scm>
 
   <properties>
