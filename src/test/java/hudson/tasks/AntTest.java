@@ -67,6 +67,8 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -87,6 +89,19 @@ public class AntTest {
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
     
+    private boolean enabled;
+
+    @Before
+    public void setUp() {
+        enabled = AntTargetNote.ENABLED;
+    }
+
+    @After
+    public void tearDown() {
+        // Restore the original setting.
+        AntTargetNote.ENABLED = enabled;
+    }
+
     /**
      * Tests the round-tripping of the configuration.
      */
@@ -418,7 +433,7 @@ public class AntTest {
         FreeStyleProject project = r.createFreeStyleProject();
         project.setScm(new ExtractResourceSCM(getClass().getResource("sample-helloworld-ant.zip")));
         project.getBuildersList().add(new Ant(targets, antName, ops, buildFile, properties));
-        //Make sure that state is the expected when running secuentially, other tests change this variable
+        //Make sure that state is the expected when running sequentially
         AntTargetNote.ENABLED = true;
         return project;
     }
