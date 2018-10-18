@@ -81,8 +81,6 @@ public class AntWrapperTest {
                 s.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/simple-build.xml"));
                 p.setDefinition(new CpsFlowDefinition("node('!master') {withAnt(installation: 'default') {if (isUnix()) {sh 'ant foo'} else {bat 'ant foo'}}}", true));
                 WorkflowRun b = r.j.buildAndAssertSuccess(p);
-                // TODO passes locally, fails in jenkins.ci: AntConsoleAnnotator processes AntOutcomeNote but not AntTargetNote
-                // (perhaps because it seems to have set ANT_HOME=/opt/ant/latest? yet the output looks right)
                 b.getLogText().writeRawLogTo(0, System.err);
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>foo</b>");
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>bar</b>");
