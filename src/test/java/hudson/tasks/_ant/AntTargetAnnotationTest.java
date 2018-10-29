@@ -6,6 +6,8 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Ant;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -25,6 +27,19 @@ public class AntTargetAnnotationTest {
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
     
+    private boolean enabled;
+
+    @Before
+    public void setUp() {
+        enabled = AntTargetNote.ENABLED;
+    }
+
+    @After
+    public void tearDown() {
+        // Restore the original setting.
+        AntTargetNote.ENABLED = enabled;
+    }
+
     @Test
     public void test1() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
@@ -34,16 +49,12 @@ public class AntTargetAnnotationTest {
         FreeStyleBuild b = r.buildAndAssertSuccess(p);
 
         AntTargetNote.ENABLED = true;
-        try {
-            WebClient wc = r.createWebClient();
-            HtmlPage c = wc.getPage(b, "console");
-            System.out.println(c.asText());
-            DomElement o = c.getElementById("console-outline");
+        WebClient wc = r.createWebClient();
+        HtmlPage c = wc.getPage(b, "console");
+        System.out.println(c.asText());
+        DomElement o = c.getElementById("console-outline");
 
-            assertEquals(2,o.getByXPath(".//LI").size());
-        } finally {
-            AntTargetNote.ENABLED = false;
-        }
+        assertEquals(2,o.getByXPath(".//LI").size());
     }
     
 }
