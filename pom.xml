@@ -73,13 +73,13 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-durable-task-step</artifactId>
-      <version>2.23-rc763.103ba9929364</version> <!-- TODO https://github.com/jenkinsci/workflow-durable-task-step-plugin/pull/81 -->
+      <version>2.26-rc791.37915aaf7f4d</version> <!-- TODO https://github.com/jenkinsci/workflow-durable-task-step-plugin/pull/87 -->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>durable-task</artifactId>
-      <version>1.27-rc372.48473ef5775d</version> <!-- TODO https://github.com/jenkinsci/durable-task-plugin/pull/84 -->
+      <version>1.27-rc374.ea1d4ad27dd9</version> <!-- TODO https://github.com/jenkinsci/durable-task-plugin/pull/86 -->
       <scope>test</scope>
     </dependency>
     <dependency>
