@@ -58,6 +58,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
@@ -395,22 +396,27 @@ public class Ant extends Builder {
          * Gets the executable path of this Ant on the given target system.
          */
         public String getExecutable(Launcher launcher) throws IOException, InterruptedException {
-            return launcher.getChannel().call(new MasterToSlaveCallable<String,IOException>() {
-                private static final long serialVersionUID = 906341330603832653L;
-                public String call() throws IOException {
-                    File exe = getExeFile();
-                    if(exe.exists())
-                        return exe.getPath();
-                    return null;
-                }
-            });
+            VirtualChannel channel = launcher.getChannel();
+            if (channel == null) {
+                throw new IOException("offline?");
+            }
+            return channel.call(new GetExecutable(getHome()));
         }
-
-        private File getExeFile() {
-            String execName = Functions.isWindows() ? "ant.bat" : "ant";
-            String home = Util.replaceMacro(getHome(), EnvVars.masterEnvVars);
-
-            return new File(home,"bin/"+execName);
+        private static class GetExecutable extends MasterToSlaveCallable<String, IOException> {
+            private static final long serialVersionUID = 906341330603832653L;
+            private final String rawHome;
+            GetExecutable(String rawHome) {
+                this.rawHome = rawHome;
+            }
+            @Override public String call() throws IOException {
+                String execName = Functions.isWindows() ? "ant.bat" : "ant";
+                String home = Util.replaceMacro(rawHome, EnvVars.masterEnvVars);
+                File exe = new File(home, "bin/" + execName);
+                if (exe.exists()) {
+                    return exe.getPath();
+                }
+                return null;
+            }
         }
 
         /**

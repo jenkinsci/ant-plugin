@@ -26,7 +26,10 @@ package hudson.tasks;
 
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.console.ConsoleNote;
 import hudson.model.FreeStyleProject;
+import hudson.slaves.DumbSlave;
+import java.util.logging.Level;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -38,6 +41,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
@@ -46,6 +50,7 @@ public class AntWrapperTest {
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
+    @Rule public LoggerRule logging = new LoggerRule();
 
     @Test public void configRoundTrip() throws Exception {
         r.addStep(new Statement() {
@@ -70,12 +75,13 @@ public class AntWrapperTest {
         r.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
                 ToolInstallations.configureDefaultAnt(tmp); // TODO could instead use DockerRule<JavaContainer> to run against a specified JDK location
+                DumbSlave s = r.j.createOnlineSlave();
+                logging.recordPackage(ConsoleNote.class, Level.FINE);
                 WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
-                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/simple-build.xml"));
-                p.setDefinition(new CpsFlowDefinition("node {withAnt(installation: 'default') {if (isUnix()) {sh 'ant foo'} else {bat 'ant foo'}}}", true));
+                s.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/simple-build.xml"));
+                p.setDefinition(new CpsFlowDefinition("node('!master') {withAnt(installation: 'default') {if (isUnix()) {sh 'ant foo'} else {bat 'ant foo'}}}", true));
                 WorkflowRun b = r.j.buildAndAssertSuccess(p);
-                // TODO passes locally, fails in jenkins.ci: AntConsoleAnnotator processes AntOutcomeNote but not AntTargetNote
-                // (perhaps because it seems to have set ANT_HOME=/opt/ant/latest? yet the output looks right)
+                b.getLogText().writeRawLogTo(0, System.err);
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>foo</b>");
                 AntTest.assertHtmlLogContains(b, "<b class=ant-target>bar</b>");
                 JenkinsRule.WebClient wc = r.j.createWebClient();

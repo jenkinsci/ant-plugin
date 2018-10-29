@@ -27,12 +27,14 @@ import com.google.common.base.Charsets;
 import hudson.console.ConsoleLogFilter;
 import hudson.console.LineTransformationOutputStream;
 import hudson.model.Run;
+import java.io.ByteArrayOutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import jenkins.util.JenkinsJVM;
 
 /**
  * Filter {@link OutputStream} that places an annotation that marks Ant target execution.
@@ -43,12 +45,32 @@ import java.nio.charset.Charset;
 public class AntConsoleAnnotator extends LineTransformationOutputStream {
     private final OutputStream out;
     private final Charset charset;
+    /** Serialized, signed, and Base64-encoded forms of {@link AntTargetNote} and {@link AntOutcomeNote} respectively. */
+    private final byte[][] antNotes;
 
     private boolean seenEmptyLine;
 
     public AntConsoleAnnotator(OutputStream out, Charset charset) {
+        this(out, charset, createAntNotes());
+    }
+
+    private AntConsoleAnnotator(OutputStream out, Charset charset, byte[][] antNotes) {
         this.out = out;
         this.charset = charset;
+        this.antNotes = antNotes;
+    }
+
+    private static byte[][] createAntNotes() {
+        JenkinsJVM.checkJenkinsJVM();
+        try {
+            ByteArrayOutputStream targetNote = new ByteArrayOutputStream();
+            new AntTargetNote().encodeTo(targetNote);
+            ByteArrayOutputStream outcomeNote = new ByteArrayOutputStream();
+            new AntOutcomeNote().encodeTo(outcomeNote);
+            return new byte[][] {targetNote.toByteArray(), outcomeNote.toByteArray()};
+        } catch (IOException x) { // should be impossible
+            throw new RuntimeException(x);
+        }
     }
 
     @Override
@@ -60,10 +82,10 @@ public class AntConsoleAnnotator extends LineTransformationOutputStream {
 
         if (seenEmptyLine && endsWith(line,':') && line.indexOf(' ')<0)
             // put the annotation
-            new AntTargetNote().encodeTo(out);
+            out.write(antNotes[0]);
 
         if (line.equals("BUILD SUCCESSFUL") || line.equals("BUILD FAILED"))
-            new AntOutcomeNote().encodeTo(out);
+            out.write(antNotes[1]);
 
         seenEmptyLine = line.length()==0;
         out.write(b,0,len);
@@ -72,6 +94,11 @@ public class AntConsoleAnnotator extends LineTransformationOutputStream {
     private boolean endsWith(String line, char c) {
         int len = line.length();
         return len>0 && line.charAt(len-1)==c;
+    }
+
+    @Override
+    public void flush() throws IOException {
+        out.flush();
     }
 
     @Override
@@ -85,8 +112,15 @@ public class AntConsoleAnnotator extends LineTransformationOutputStream {
     }
     private static class ConsoleLogFilterImpl extends ConsoleLogFilter implements Serializable {
         private static final long serialVersionUID = 1;
+        private byte[][] antNotes = createAntNotes();
+        private Object readResolve() {
+            if (antNotes == null) { // old program.dat
+                antNotes = createAntNotes();
+            }
+            return this;
+        }
         @Override public OutputStream decorateLogger(Run build, OutputStream logger) throws IOException, InterruptedException {
-            return new AntConsoleAnnotator(logger, Charsets.UTF_8);
+            return new AntConsoleAnnotator(logger, Charsets.UTF_8, antNotes);
         }
     }
 
