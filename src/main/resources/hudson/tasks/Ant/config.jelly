@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 The MIT License
 
-Copyright (c) 2004-2010, Sun Microsystems, Inc.
+Copyright (c) 2011, CloudBees, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +22,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
-
-<!--
-  Config page
--->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry title="${%Name}" field="name">
-        <f:textbox/>
+    <j:if test="${size(descriptor.installations) != 0}">
+        <f:entry title="${%Ant Version}">
+            <select class="setting-input" name="ant.antName">
+                <option value="(Default)">${%Default}</option>
+                <j:forEach var="install" items="${descriptor.installations}">
+                    <f:option selected="${install.name == instance.ant.name}" value="${install.name}">
+                        ${install.name}
+                    </f:option>
+                </j:forEach>
+            </select>
+        </f:entry>
+    </j:if>
+    
+    <f:entry title="${%Targets}" field="targets">
+        <f:expandableTextbox />
     </f:entry>
-    <f:entry title="ANT_HOME" field="home">
-        <f:textbox/>
-    </f:entry>
+    
+    <f:advanced>
+        <f:entry title="${%Build File}" field="buildFile">
+            <f:expandableTextbox />
+        </f:entry>
+        <f:entry title="${%Properties}" field="properties">
+            <f:expandableTextbox />
+        </f:entry>
+        <f:entry title="${%Java Options}" field="antOpts">
+            <f:expandableTextbox />
+        </f:entry>
+    </f:advanced>
 </j:jelly>
