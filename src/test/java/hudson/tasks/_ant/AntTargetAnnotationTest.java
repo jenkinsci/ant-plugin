@@ -23,8 +23,7 @@ import static org.junit.Assert.assertEquals;
 public class AntTargetAnnotationTest {
     
     @Rule
-    public JenkinsRule j = new JenkinsRule();
-
+    public JenkinsRule r = new JenkinsRule();
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
     
@@ -43,14 +42,14 @@ public class AntTargetAnnotationTest {
 
     @Test
     public void test1() throws Exception {
-        FreeStyleProject p = j.createFreeStyleProject();
+        FreeStyleProject p = r.createFreeStyleProject();
         Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(tmp);
-        p.getBuildersList().add(new Ant("foo", ant.getName(), null, null, null));
-        p.setScm(new SingleFileSCM("build.xml", getClass().getResource("simple-build.xml")));
-        FreeStyleBuild b = j.buildAndAssertSuccess(p);
+        p.getBuildersList().add(new Ant("foo",ant.getName(),null,null,null));
+        p.setScm(new SingleFileSCM("build.xml",getClass().getResource("simple-build.xml")));
+        FreeStyleBuild b = r.buildAndAssertSuccess(p);
 
         AntTargetNote.ENABLED = true;
-        WebClient wc = j.createWebClient();
+        WebClient wc = r.createWebClient();
         HtmlPage c = wc.getPage(b, "console");
         System.out.println(c.asText());
         DomElement o = c.getElementById("console-outline");
