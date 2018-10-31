@@ -41,15 +41,14 @@ import hudson.model.TaskListener;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks._ant.AntConsoleAnnotator;
 import hudson.tools.ToolInstallation;
+import java.io.IOException;
+import java.util.Map;
+import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildWrapper;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.Map;
 
 public class AntWrapper extends SimpleBuildWrapper {
 
