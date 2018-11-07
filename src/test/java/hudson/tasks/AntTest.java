@@ -53,12 +53,16 @@ import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
 import hudson.util.DescribableList;
 import hudson.util.VersionNumber;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarFile;
 import java.util.logging.Level;
 
 import jenkins.model.Jenkins;
@@ -335,6 +339,21 @@ public class AntTest {
 
     @Test
     public void customBuildFileTest() throws Exception {
+        String booter = System.getProperty("surefire.real.class.path");
+        System.err.println("booter=" + booter);
+        try (JarFile jf = new JarFile(booter)) {
+            for (String cp : jf.getManifest().getMainAttributes().getValue("Class-Path").split(" ")) {
+                System.err.println("cp: " + cp);
+            }
+        }
+        for (String cp : System.getProperty("java.class.path").split(File.pathSeparator)) {
+            try {
+                System.err.println("rel: " + new URI(null, Paths.get(booter).getParent().relativize(Paths.get(cp)).toString(), null).toASCIIString());
+            } catch (Exception x) {
+                System.err.println("could not rel " + cp + ": " + x);
+            }
+        }
+
         FreeStyleProject project = createSimpleAntProject("", null, "build-custom-name.xml", null);
         
         FreeStyleBuild build = project.scheduleBuild2(0).get();
