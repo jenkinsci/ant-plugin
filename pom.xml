@@ -32,6 +32,8 @@
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.121.2</jenkins.version>
     <java.level>8</java.level>
+    <test>hudson.tasks.AntTest#customBuildFileTest</test>
+    <maven.test.redirectTestOutputToFile>false</maven.test.redirectTestOutputToFile>
   </properties>
 
   <dependencies>
