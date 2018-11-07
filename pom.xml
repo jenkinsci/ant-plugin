@@ -34,6 +34,7 @@
     <java.level>8</java.level>
     <test>hudson.tasks.AntTest#customBuildFileTest</test>
     <maven.test.redirectTestOutputToFile>false</maven.test.redirectTestOutputToFile>
+    <surefire.rerunFailingTestsCount>0</surefire.rerunFailingTestsCount>
   </properties>
 
   <dependencies>
