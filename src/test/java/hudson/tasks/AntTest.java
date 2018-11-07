@@ -59,8 +59,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 import jenkins.model.Jenkins;
+import jenkins.security.ClassFilterImpl;
 import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -76,6 +78,7 @@ import org.jvnet.hudson.test.ExtractResourceSCM;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.ToolInstallations;
 
@@ -88,7 +91,9 @@ public class AntTest {
     public JenkinsRule r = new JenkinsRule();
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
-    
+        @Rule
+    public LoggerRule logging = new LoggerRule().record(ClassFilterImpl.class, Level.FINE);
+
     private boolean enabled;
 
     @Before
