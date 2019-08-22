@@ -1,9 +1,5 @@
 tool:
   ant:
-    defaultProperties:
-      - installSource:
-          installers:
-            - "antFromApache"
     installations:
       - name: "Ant 1.10.5"
         properties:
