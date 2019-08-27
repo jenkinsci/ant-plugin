@@ -53,6 +53,7 @@ import hudson.util.VariableResolver;
 import hudson.util.FormValidation;
 import hudson.util.XStream2;
 
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -356,7 +357,9 @@ public class Ant extends Builder {
 
         @DataBoundConstructor
         public AntInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
-            super(name, launderHome(home), properties);
+            // JENKINS-57561: while ANT_HOME is an empty string when the tool is configured from UI, if that value is not configured in
+            // yaml files for JCasC, home is null causing a NPE
+            super(name, launderHome(StringUtils.defaultString(home)), properties);
         }
 
         /**

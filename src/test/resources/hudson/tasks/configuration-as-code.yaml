@@ -1,0 +1,11 @@
+tool:
+  ant:
+    installations:
+      - name: "Ant 1.10.5"
+        properties:
+          - installSource:
+              installers:
+                - antFromApache:
+                    id: "1.10.5"
+      - home: "/home/ant"
+        name: "Ant 1.10.6"
