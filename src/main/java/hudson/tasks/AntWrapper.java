@@ -79,10 +79,10 @@ public class AntWrapper extends SimpleBuildWrapper {
     @Override
     public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
         if (installation != null) {
-            toolEnv(context, installation, Jenkins.getActiveInstance().getDescriptorByType(Ant.DescriptorImpl.class).getInstallations(), workspace, listener, initialEnvironment);
+            toolEnv(context, installation, Jenkins.get().getDescriptorByType(Ant.DescriptorImpl.class).getInstallations(), workspace, listener, initialEnvironment);
         }
         if (jdk != null) {
-            toolEnv(context, jdk, Jenkins.getActiveInstance().getDescriptorByType(JDK.DescriptorImpl.class).getInstallations(), workspace, listener, initialEnvironment);
+            toolEnv(context, jdk, Jenkins.get().getDescriptorByType(JDK.DescriptorImpl.class).getInstallations(), workspace, listener, initialEnvironment);
         }
     }
 

@@ -366,6 +366,7 @@ public class Ant extends Builder {
          * @deprecated as of 1.308
          *      Use {@link #AntInstallation(String, String, List)}
          */
+        @Deprecated
         public AntInstallation(String name, String home) {
             this(name,home,Collections.<ToolProperty<?>>emptyList());
         }
@@ -451,12 +452,12 @@ public class Ant extends Builder {
             // for compatibility reasons, the persistence is done by Ant.DescriptorImpl  
             @Override
             public AntInstallation[] getInstallations() {
-                return Jenkins.getInstance().getDescriptorByType(Ant.DescriptorImpl.class).getInstallations();
+                return Jenkins.get().getDescriptorByType(Ant.DescriptorImpl.class).getInstallations();
             }
 
             @Override
             public void setInstallations(AntInstallation... installations) {
-                Jenkins.getInstance().getDescriptorByType(Ant.DescriptorImpl.class).setInstallations(installations);
+                Jenkins.get().getDescriptorByType(Ant.DescriptorImpl.class).setInstallations(installations);
             }
 
             @Override
@@ -469,7 +470,7 @@ public class Ant extends Builder {
              */
             public FormValidation doCheckHome(@QueryParameter File value) {
                 // this can be used to check the existence of a file on the server, so needs to be protected
-                if(!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER))
+                if(!Jenkins.get().hasPermission(Jenkins.ADMINISTER))
                     return FormValidation.ok();
 
                 if(value.getPath().equals(""))

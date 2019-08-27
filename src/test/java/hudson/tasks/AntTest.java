@@ -130,9 +130,7 @@ public class AntTest {
      */
     @Test
     public void testGlobalConfigAjax() throws Exception {
-        HtmlPage p = Jenkins.getVersion().toString().startsWith("2") ? 
-                     r.createWebClient().goTo("configureTools") : 
-                     r.createWebClient().goTo("configure");
+        HtmlPage p = r.createWebClient().goTo("configureTools");
         HtmlForm f = p.getFormByName("config");
         HtmlButton b = r.getButtonByCaption(f, "Add Ant");
         b.click();
@@ -184,12 +182,8 @@ public class AntTest {
         project.getBuildersList().add(new Ant("foo",null,null,null,null));
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
-        // Due to bug JENKINS-28790. Password should not be shown but it is.
-        if (SystemUtils.IS_OS_WINDOWS && Jenkins.getVersion().isOlderThan(new VersionNumber("1.653"))) {
-            r.assertLogContains("-Dpassword=12345", build);
-        } else {
-            r.assertLogNotContains("-Dpassword=12345", build);
-        }
+        
+        r.assertLogNotContains("-Dpassword=12345", build);
     }
 
     @Test
