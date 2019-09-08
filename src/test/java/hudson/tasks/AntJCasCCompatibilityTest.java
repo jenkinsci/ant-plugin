@@ -32,6 +32,6 @@ public class AntJCasCCompatibilityTest extends RoundTripAbstractTest {
 
     @Override
     protected String stringInLogExpected() {
-        return "Setting class hudson.tools.InstallSourceProperty. installers = [{antFromApache={}}]";
+        return "Setting class hudson.tools.InstallSourceProperty.installers = [{antFromApache={}}]";
     }
 }
