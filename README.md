@@ -42,12 +42,12 @@ withAnt(installation: 'myinstall') {
 }
 ```
 
-# Change Log
+# Changelog
 
-### Version 1.10 and later
+## Version 1.10 and later
 
 See [GitHub releases](https://github.com/jenkinsci/ant-plugin/releases).
 
-### Version 1.9 and older
+## Version 1.9 and older
 
 See the [old changelog](docs/old-changelog.md).
