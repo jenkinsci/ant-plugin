@@ -1,33 +1,56 @@
-Jenkins Ant Plugin
-=========================
+# Description
 
-This plugin permits Jenkins to run Apache Ant build steps.
+This plugin adds [Apache Ant](http://ant.apache.org/) support to Jenkins
 
-See [Ant Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Ant+Plugin) for more information.
+This functionality used to be a part of the core, but as of Jenkins 1.431, it was split off into a separate plugin.
 
-[![Build Status](https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/ant-plugin)](https://jenkins.ci.cloudbees.com/job/plugins/job/ant-plugin/)
+# Installation and usage
 
-License
--------
+## Installation
 
-	The MIT License (MIT)
+For this plugin to be used, an Ant installation must be specified in the
+global Jenkins configuration. It can be installed automatically:
 
-    Copyright (c) 2014 <copyright holders>
+![](docs/images/automatic.png){width="680"}
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
+Or manually:
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
+![](docs/images/manual.png){width="680"}
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
+## Usage
+
+![](docs/images/usage.png){width="680"}
+
+-   **Ant Version:** Ant Installation to use. See previous section.
+-   **Targets:** Ant targets to invoke. If left blank, default target
+    will be invoked.
+-   **Build File:** Build file to use. If left blank, plugin will look
+    for build.xml in the root directory.
+-   **Properties:** Additional parameters (typical properties file
+    format) to pass to the build. They are passed like -D(name)=(value)
+-   **Java Options:** Custom `ANT_OPTS`.
+
+
+An example of using the Ant task inside Pipeline DSL.
+This code snippet must be put inside a `step` block when using the declarative syntax.
+
+```groovy
+withAnt(installation: 'myinstall') {
+    dir("scoring") {
+    if (isUnix()) {
+      sh "ant mytarget"
+    } else {
+      bat "ant mytarget"
+    }
+}
+```
+
+# Change Log
+
+### Version 1.10 and later
+
+See [GitHub releases](https://github.com/jenkinsci/ant-plugin/releases).
+
+### Version 1.9 and older
+
+See the [old changelog](docs/old-changelog.md).
