@@ -4,12 +4,8 @@ See [GitHub releases](https://github.com/jenkinsci/ant-plugin/releases).
 
 ### Version 1.9 (2018-10-29)
 
--   [
-    JENKINS-54133](https://issues.jenkins-ci.org/browse/JENKINS-54133) -
-    Getting issue details... STATUS as applied to Ant console notes.
--   [
-    JENKINS-52139](https://issues.jenkins-ci.org/browse/JENKINS-52139) -
-    Getting issue details... STATUS
+-   [JENKINS-54133](https://issues.jenkins-ci.org/browse/JENKINS-54133) (as applied to Ant console notes)
+-   [JENKINS-52139](https://issues.jenkins-ci.org/browse/JENKINS-52139)
 
 ### Version 1.8 (Jan 22, 2018)
 

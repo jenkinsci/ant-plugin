@@ -11,15 +11,15 @@ This functionality used to be a part of the core, but as of Jenkins 1.431, it wa
 For this plugin to be used, an Ant installation must be specified in the
 global Jenkins configuration. It can be installed automatically:
 
-![](docs/images/automatic.png){width="680"}
+![](docs/images/automatic.png)
 
 Or manually:
 
-![](docs/images/manual.png){width="680"}
+![](docs/images/manual.png)
 
 ## Usage
 
-![](docs/images/usage.png){width="680"}
+![](docs/images/usage.png)
 
 -   **Ant Version:** Ant Installation to use. See previous section.
 -   **Targets:** Ant targets to invoke. If left blank, default target
