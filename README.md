@@ -22,12 +22,9 @@ Or manually:
 ![](docs/images/usage.png)
 
 -   **Ant Version:** Ant Installation to use. See previous section.
--   **Targets:** Ant targets to invoke. If left blank, default target
-    will be invoked.
--   **Build File:** Build file to use. If left blank, plugin will look
-    for build.xml in the root directory.
--   **Properties:** Additional parameters (typical properties file
-    format) to pass to the build. They are passed like -D(name)=(value)
+-   **Targets:** Ant targets to invoke. If left blank, default target will be invoked.
+-   **Build File:** Build file to use. If left blank, plugin will look for `build.xml` in the root directory.
+-   **Properties:** Additional parameters (typical properties file format) to pass to the build. They are passed like `-Dname=value`
 -   **Java Options:** Custom `ANT_OPTS`.
 
 
