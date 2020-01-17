@@ -107,7 +107,6 @@
       <version>1.14</version>
       <scope>test</scope>
     </dependency>
-    <!-- JCasC compatibility -->
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
