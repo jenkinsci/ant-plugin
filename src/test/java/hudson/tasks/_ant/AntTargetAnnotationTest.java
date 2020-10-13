@@ -6,8 +6,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Ant;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -17,6 +15,8 @@ import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.ToolInstallations;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.rules.TestRule;
+import org.jvnet.hudson.test.FlagRule;
 /**
  * @author Kohsuke Kawaguchi
  */
@@ -27,18 +27,8 @@ public class AntTargetAnnotationTest {
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
     
-    private boolean enabled;
-
-    @Before
-    public void setUp() {
-        enabled = AntTargetNote.ENABLED;
-    }
-
-    @After
-    public void tearDown() {
-        // Restore the original setting.
-        AntTargetNote.ENABLED = enabled;
-    }
+    @Rule
+    public TestRule antTargetNoteEnabled = new FlagRule<Boolean>(() -> AntTargetNote.ENABLED, x -> AntTargetNote.ENABLED = x);
 
     @Test
     public void test1() throws Exception {

@@ -52,7 +52,6 @@ import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
 import hudson.util.DescribableList;
-import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -60,19 +59,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import jenkins.model.Jenkins;
 import org.apache.commons.lang.SystemUtils;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestRule;
 import org.jvnet.hudson.test.ExtractResourceSCM;
+import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
@@ -89,18 +87,8 @@ public class AntTest {
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
     
-    private boolean enabled;
-
-    @Before
-    public void setUp() {
-        enabled = AntTargetNote.ENABLED;
-    }
-
-    @After
-    public void tearDown() {
-        // Restore the original setting.
-        AntTargetNote.ENABLED = enabled;
-    }
+    @Rule
+    public TestRule antTargetNoteEnabled = new FlagRule<Boolean>(() -> AntTargetNote.ENABLED, x -> AntTargetNote.ENABLED = x);
 
     /**
      * Tests the round-tripping of the configuration.

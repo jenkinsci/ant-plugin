@@ -1,30 +1,20 @@
 package hudson.tasks._ant;
 
 import hudson.MarkupText;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.rules.TestRule;
+import org.jvnet.hudson.test.FlagRule;
 
 /**
  * Unit test for the {@link AntTargetNote} class.
  */
 public class AntTargetNoteTest {
 
-    private boolean enabled;
-
-    @Before
-    public void setUp() {
-        enabled = AntTargetNote.ENABLED;
-        AntTargetNote.ENABLED = true;
-    }
-
-    @After
-    public void tearDown() {
-        // Restore the original setting.
-        AntTargetNote.ENABLED = enabled;
-    }
+    @Rule
+    public TestRule antTargetNoteEnabled = new FlagRule<Boolean>(() -> AntTargetNote.ENABLED, x -> AntTargetNote.ENABLED = x, true);
 
     @Test
     public void testAnnotateTarget() {
