@@ -29,7 +29,7 @@ Or manually:
 
 
 An example of using the Ant task inside Pipeline DSL.
-This code snippet must be put inside a `step` block when using the declarative syntax.
+This code snippet must be put inside a `script` block when using the declarative syntax.
 
 ```groovy
 withAnt(installation: 'myinstall') {
