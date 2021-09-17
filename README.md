@@ -17,6 +17,8 @@ Or manually:
 
 ![](docs/images/manual.png)
 
+For more details on how to install Ant automatically, see the [Ant Automatic Installers](docs/ant-automatic-installers.md) guide.
+
 ## Usage
 
 ![](docs/images/usage.png)
