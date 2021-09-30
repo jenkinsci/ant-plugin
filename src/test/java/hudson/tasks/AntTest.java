@@ -200,7 +200,8 @@ public class AntTest {
             assertTrue("Missing $BUILD_TAG: " + log, log.contains("vTAG=jenkins-test project-AX\\=is-1"));
             assertTrue("Missing $EXECUTOR_NUMBER: " + log, log.matches("(?s).*vEXEC=\\d.*"));
             // $NODE_NAME is expected to be empty when running on master.. not checking.
-            assertTrue("Missing $NODE_LABELS: " + log, log.contains("vLAB=master"));
+            String label = r.jenkins.getVersion().isOlderThan(new VersionNumber("2.307")) ? "master" : "built-in";
+            assertTrue("Missing $NODE_LABELS: " + log, log.contains("vLAB=" + label));
             assertTrue("Missing $JAVA_HOME: " + log, log.matches("(?s).*vJH=[^\\r\\n].*"));
             assertTrue("Missing $WORKSPACE: " + log, log.matches("(?s).*vWS=[^\\r\\n].*"));
             assertTrue("Missing $HUDSON_URL: " + log, log.contains("vHURL=http"));
