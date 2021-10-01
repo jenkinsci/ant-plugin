@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>ant</artifactId>
-  <version>1.12</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Ant Plugin</name>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
@@ -17,11 +17,11 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>ant-1.12</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <properties>
-    <revision>1.12</revision>
+    <revision>1.13</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.249.3</jenkins.version>
     <java.level>8</java.level>
