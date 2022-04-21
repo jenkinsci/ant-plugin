@@ -41,7 +41,7 @@ public class AntTargetAnnotationTest {
         AntTargetNote.ENABLED = true;
         WebClient wc = r.createWebClient();
         HtmlPage c = wc.getPage(b, "console");
-        System.out.println(c.asText());
+        System.out.println(c.asNormalizedText());
         DomElement o = c.getElementById("console-outline");
 
         assertEquals(2,o.getByXPath(".//LI").size());

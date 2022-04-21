@@ -43,7 +43,7 @@ import hudson.tasks._ant.AntConsoleAnnotator;
 import hudson.tools.ToolInstallation;
 import java.io.IOException;
 import java.util.Map;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildWrapper;
 import org.jenkinsci.Symbol;
@@ -87,7 +87,7 @@ public class AntWrapper extends SimpleBuildWrapper {
     }
 
     // TODO this is pretty generic and could perhaps be added to SimpleBuildWrapper?
-    private static void toolEnv(Context context, @Nonnull String tool, ToolInstallation[] tools, FilePath workspace, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
+    private static void toolEnv(Context context, @NonNull String tool, ToolInstallation[] tools, FilePath workspace, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
         ToolInstallation inst = null;
         for (ToolInstallation _inst : tools) {
             if (_inst.getName().equals(tool)) {
