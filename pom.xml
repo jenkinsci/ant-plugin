@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>ant</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${changelist}</version>
   <packaging>hpi</packaging>
   <name>Ant Plugin</name>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
@@ -21,8 +21,7 @@
   </scm>
 
   <properties>
-    <revision>1.14</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
     <jenkins.version>2.289.3</jenkins.version>
   </properties>
 
