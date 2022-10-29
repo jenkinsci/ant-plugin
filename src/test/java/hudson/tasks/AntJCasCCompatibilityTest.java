@@ -6,7 +6,7 @@ import jenkins.model.Jenkins;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 public class AntJCasCCompatibilityTest extends RoundTripAbstractTest {
 
@@ -15,7 +15,7 @@ public class AntJCasCCompatibilityTest extends RoundTripAbstractTest {
         final Jenkins jenkins = restartableJenkinsRule.j.jenkins;
 
         final Ant.DescriptorImpl descriptor = (Ant.DescriptorImpl) jenkins.getDescriptor(Ant.class);
-        assertTrue("The descriptor should not be null", descriptor != null);
+        assertNotNull("The descriptor should not be null", descriptor);
 
         final Ant.AntInstallation[] installations = descriptor.getInstallations();
         assertEquals("The installation has not retrieved", 2, installations.length);
