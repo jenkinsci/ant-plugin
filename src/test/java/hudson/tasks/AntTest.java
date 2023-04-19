@@ -60,8 +60,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.SystemUtils;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
