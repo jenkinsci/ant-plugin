@@ -23,9 +23,9 @@
  */
 package hudson.tasks;
 
-import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlButton;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import hudson.EnvVars;
 import hudson.Functions;
 import hudson.matrix.Axis;
@@ -129,8 +129,8 @@ public class AntTest {
         HtmlForm f = p.getFormByName("config");
         HtmlButton b = r.getButtonByCaption(f, "Add Ant");
         b.click();
-        r.findPreviousInputElement(b,"name").setValueAttribute("myAnt");
-        r.findPreviousInputElement(b,"home").setValueAttribute("/tmp/foo");
+        r.findPreviousInputElement(b,"name").setValue("myAnt");
+        r.findPreviousInputElement(b,"home").setValue("/tmp/foo");
         r.submit(f);
         verify();
 
