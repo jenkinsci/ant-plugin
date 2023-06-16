@@ -24,8 +24,8 @@
 
 package hudson.tasks;
 
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlPage;
 import hudson.console.ConsoleNote;
 import hudson.model.FreeStyleProject;
 import hudson.slaves.DumbSlave;
