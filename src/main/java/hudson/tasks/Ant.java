@@ -58,7 +58,6 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.remoting.VirtualChannel;
 
 import java.io.File;
@@ -441,7 +440,6 @@ public class Ant extends Builder {
         }
 
         @Extension @Symbol("ant")
-        @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="https://github.com/jenkinsci/jenkins/pull/2094")
         public static class DescriptorImpl extends ToolDescriptor<AntInstallation> {
 
             @Override
