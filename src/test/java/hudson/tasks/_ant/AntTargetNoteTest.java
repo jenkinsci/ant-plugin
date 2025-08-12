@@ -1,39 +1,49 @@
 package hudson.tasks._ant;
 
 import hudson.MarkupText;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.rules.TestRule;
-import org.jvnet.hudson.test.FlagRule;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for the {@link AntTargetNote} class.
  */
-public class AntTargetNoteTest {
+class AntTargetNoteTest {
 
-    @Rule
-    public TestRule antTargetNoteEnabled = new FlagRule<Boolean>(() -> AntTargetNote.ENABLED, x -> AntTargetNote.ENABLED = x, true);
+    private boolean antTargetNoteEnabled;
+
+    @BeforeEach
+    void setUp() {
+        antTargetNoteEnabled = AntTargetNote.ENABLED;
+        AntTargetNote.ENABLED = true;
+    }
+
+    @AfterEach
+    void tearDown() {
+        AntTargetNote.ENABLED = antTargetNoteEnabled;
+    }
 
     @Test
-    public void testAnnotateTarget() {
+    void testAnnotateTarget() {
         assertEquals("<b class=ant-target>TARGET</b>:", annotate("TARGET:"));
     }
 
     @Test
-    public void testAnnotateTargetContainingColon() {
+    void testAnnotateTargetContainingColon() {
         // See HUDSON-7026.
         assertEquals("<b class=ant-target>TEST:TARGET</b>:", annotate("TEST:TARGET:"));
     }
 
     @Test
-    public void testDisabled() {
+    void testDisabled() {
         AntTargetNote.ENABLED = false;
         assertEquals("TARGET:", annotate("TARGET:"));
     }
 
-    private String annotate(String text) {
+    private static String annotate(String text) {
         MarkupText markupText = new MarkupText(text);
         new AntTargetNote().annotate(new Object(), markupText, 0);
         return markupText.toString(true);
