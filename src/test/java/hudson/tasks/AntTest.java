@@ -23,6 +23,7 @@
  */
 package hudson.tasks;
 
+import hudson.tasks._ant.AntTargetAnnotationTest;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
@@ -52,6 +53,8 @@ import hudson.tools.InstallSourceProperty;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolPropertyDescriptor;
 import hudson.util.DescribableList;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -59,49 +62,54 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.SystemUtils;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestRule;
 import org.jvnet.hudson.test.ExtractResourceSCM;
-import org.jvnet.hudson.test.FlagRule;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.ToolInstallations;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class AntTest {
-    
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
-    
-    @Rule
-    public TestRule antTargetNoteEnabled = new FlagRule<Boolean>(() -> AntTargetNote.ENABLED, x -> AntTargetNote.ENABLED = x);
+@WithJenkins
+class AntTest {
+
+    private JenkinsRule r;
+    @TempDir
+    private File tmp;
+
+    private boolean antTargetNoteEnabled;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        r = rule;
+        antTargetNoteEnabled = AntTargetNote.ENABLED;
+    }
+
+    @AfterEach
+    void tearDown() {
+        AntTargetNote.ENABLED = antTargetNoteEnabled;
+    }
 
     /**
      * Tests the round-tripping of the configuration.
      */
     @Test
-    public void testConfigRoundtrip() throws Exception {
+    void testConfigRoundtrip() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
         p.getBuildersList().add(new Ant("a",null,"-b","c.xml","d=e"));
 
@@ -124,7 +132,7 @@ public class AntTest {
      * Simulates the addition of the new Ant via UI and makes sure it works.
      */
     @Test
-    public void testGlobalConfigAjax() throws Exception {
+    void testGlobalConfigAjax() throws Exception {
         HtmlPage p = r.createWebClient().goTo("configureTools");
         HtmlForm f = p.getFormByName("config");
         HtmlButton b = r.getButtonByCaption(f, "Add Ant");
@@ -161,9 +169,9 @@ public class AntTest {
     }
 
     @Test
-    public void testSensitiveParameters() throws Exception {
+    void testSensitiveParameters() throws Exception {
         //TODO perhaps better way to check the requirement
-        assumeTrue("Ant.bat is not automatically present on Windows", !Functions.isWindows());
+        assumeTrue(!Functions.isWindows(), "Ant.bat is not automatically present on Windows");
         
         FreeStyleProject project = r.createFreeStyleProject();
         ParametersDefinitionProperty pdb = new ParametersDefinitionProperty(
@@ -172,7 +180,7 @@ public class AntTest {
                 new StringParameterDefinition("string2", "Value2", "string description")
         );
         project.addProperty(pdb);
-        project.setScm(new SingleFileSCM("build.xml", hudson.tasks._ant.AntTargetAnnotationTest.class.getResource("simple-build.xml")));
+        project.setScm(new SingleFileSCM("build.xml", AntTargetAnnotationTest.class.getResource("simple-build.xml")));
 
         project.getBuildersList().add(new Ant("foo",null,null,null,null));
 
@@ -182,8 +190,8 @@ public class AntTest {
     }
 
     @Test
-    public void testParameterExpansion() throws Exception {
-        if (!SystemUtils.IS_OS_WINDOWS) {
+    void testParameterExpansion() throws Exception {
+        if (!Functions.isWindows()) {
             String antName = configureDefaultAnt().getName();
             // Use a matrix project so we have env stuff via builtins, parameters and matrix axis.
             MatrixProject project = r.createProject(MatrixProject.class, "test project");// Space in name
@@ -192,43 +200,59 @@ public class AntTest {
                     new StringParameterDefinition("FOO", "bar", "")));
             project.setScm(new ExtractResourceSCM(getClass().getResource("ant-job.zip")));
             project.getBuildersList().add(new Ant("", antName, null, null,
-                    "vNUM=$BUILD_NUMBER\nvID=$BUILD_ID\nvJOB=$JOB_NAME\nvTAG=$BUILD_TAG\nvEXEC=$EXECUTOR_NUMBER\n"
-                    + "vNODE=$NODE_NAME\nvLAB=$NODE_LABELS\nvJAV=$JAVA_HOME\nvWS=$WORKSPACE\nvHURL=$HUDSON_URL\n"
-                    + "vBURL=$BUILD_URL\nvJURL=$JOB_URL\nvHH=$HUDSON_HOME\nvJH=$JENKINS_HOME\nvFOO=$FOO\nvAX=$AX"));
+                    """
+                            vNUM=$BUILD_NUMBER
+                            vID=$BUILD_ID
+                            vJOB=$JOB_NAME
+                            vTAG=$BUILD_TAG
+                            vEXEC=$EXECUTOR_NUMBER
+                            vNODE=$NODE_NAME
+                            vLAB=$NODE_LABELS
+                            vJAV=$JAVA_HOME
+                            vWS=$WORKSPACE
+                            vHURL=$HUDSON_URL
+                            vBURL=$BUILD_URL
+                            vJURL=$JOB_URL
+                            vHH=$HUDSON_HOME
+                            vJH=$JENKINS_HOME
+                            vFOO=$FOO
+                            vAX=$AX"""));
             r.assertBuildStatusSuccess(project.scheduleBuild2(0));
             MatrixRun build = project.getItem("AX=is").getLastBuild();
             String log = JenkinsRule.getLog(build);
-            assertTrue("Missing $BUILD_NUMBER: " + log, log.contains("vNUM=1"));
+            assertTrue(log.contains("vNUM=1"), "Missing $BUILD_NUMBER: " + log);
             // TODO 1.597+: assertTrue("Missing $BUILD_ID: " + log, log.contains("vID=1"));
-            assertTrue("Missing $JOB_NAME: " + log, log.contains(project.getName()));
+            assertTrue(log.contains(project.getName()), "Missing $JOB_NAME: " + log);
             // Odd build tag, but it's constructed with getParent().getName() and the parent is the
             // matrix configuration, not the project.. if matrix build tag ever changes, update
             // expected value here:
-            assertTrue("Missing $BUILD_TAG: " + log, log.contains("vTAG=jenkins-test project-AX\\=is-1"));
-            assertTrue("Missing $EXECUTOR_NUMBER: " + log, log.matches("(?s).*vEXEC=\\d.*"));
+            assertTrue(log.contains("vTAG=jenkins-test project-AX\\=is-1"), "Missing $BUILD_TAG: " + log);
+            assertTrue(log.matches("(?s).*vEXEC=\\d.*"), "Missing $EXECUTOR_NUMBER: " + log);
             // $NODE_NAME is expected to be empty when running on master.. not checking.
             String builtInNodeLabel = r.jenkins.getSelfLabel().getExpression(); // compatibility with 2.307+
-            assertTrue("Missing $NODE_LABELS: " + log, log.contains("vLAB=" + builtInNodeLabel));
-            assertTrue("Missing $JAVA_HOME: " + log, log.matches("(?s).*vJH=[^\\r\\n].*"));
-            assertTrue("Missing $WORKSPACE: " + log, log.matches("(?s).*vWS=[^\\r\\n].*"));
-            assertTrue("Missing $HUDSON_URL: " + log, log.contains("vHURL=http"));
-            assertTrue("Missing $BUILD_URL: " + log, log.contains("vBURL=http"));
-            assertTrue("Missing $JOB_URL: " + log, log.contains("vJURL=http"));
-            assertTrue("Missing $HUDSON_HOME: " + log, log.matches("(?s).*vHH=[^\\r\\n].*"));
-            assertTrue("Missing $JENKINS_HOME: " + log, log.matches("(?s).*vJH=[^\\r\\n].*"));
-            assertTrue("Missing build parameter $FOO: " + log, log.contains("vFOO=bar"));
-            assertTrue("Missing matrix axis $AX: " + log, log.contains("vAX=is"));
+            assertTrue(log.contains("vLAB=" + builtInNodeLabel), "Missing $NODE_LABELS: " + log);
+            assertTrue(log.matches("(?s).*vJH=[^\\r\\n].*"), "Missing $JAVA_HOME: " + log);
+            assertTrue(log.matches("(?s).*vWS=[^\\r\\n].*"), "Missing $WORKSPACE: " + log);
+            assertTrue(log.contains("vHURL=http"), "Missing $HUDSON_URL: " + log);
+            assertTrue(log.contains("vBURL=http"), "Missing $BUILD_URL: " + log);
+            assertTrue(log.contains("vJURL=http"), "Missing $JOB_URL: " + log);
+            assertTrue(log.matches("(?s).*vHH=[^\\r\\n].*"), "Missing $HUDSON_HOME: " + log);
+            assertTrue(log.matches("(?s).*vJH=[^\\r\\n].*"), "Missing $JENKINS_HOME: " + log);
+            assertTrue(log.contains("vFOO=bar"), "Missing build parameter $FOO: " + log);
+            assertTrue(log.contains("vAX=is"), "Missing matrix axis $AX: " + log);
         }
     }
 
     private AntInstallation configureDefaultAnt() throws Exception {
-        return ToolInstallations.configureDefaultAnt(tmp);
+        TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+        temporaryFolder.create();
+        return ToolInstallations.configureDefaultAnt(temporaryFolder);
     }
 
     @Issue("JENKINS-7442")
     @Test
-    public void testParameterExpansionByShell() throws Exception {
-        assumeFalse("TODO ant.bat seems to be leaving %HOME% unevaluated; unclear what the expected behavior is", Functions.isWindows());
+    void testParameterExpansionByShell() throws Exception {
+        assumeFalse(Functions.isWindows(), "TODO ant.bat seems to be leaving %HOME% unevaluated; unclear what the expected behavior is");
         String antName = configureDefaultAnt().getName();
         FreeStyleProject project = r.createFreeStyleProject();
         project.setScm(new ExtractResourceSCM(getClass().getResource("ant-job.zip")));
@@ -242,18 +266,19 @@ public class AntTest {
         r.assertBuildStatusSuccess(build);
         String log = JenkinsRule.getLog(build);
         if (!Functions.isWindows()) homeVar = "\\" + homeVar; // Regex escape for $
-        assertTrue("Missing simple HOME parameter: " + log,
-                   log.matches("(?s).*vFOO=(?!" + homeVar + ").*"));
-        assertTrue("Missing HOME parameter with other text: " + log,
-                   log.matches("(?s).*vBAR=Home sweet (?!" + homeVar + ")[^\\r\\n]*\\..*"));
-        assertTrue("Missing HOME ant property: " + log,
-                   log.matches("(?s).*vHOME=(?!" + homeVar + ").*"));
-        assertTrue("Missing HOME ant property with other text: " + log,
-                   log.matches("(?s).*vFOOHOME=Foo (?!" + homeVar + ").*"));
+        assertTrue(log.matches("(?s).*vFOO=(?!" + homeVar + ").*"),
+                   "Missing simple HOME parameter: " + log);
+        assertTrue(log.matches("(?s).*vBAR=Home sweet (?!" + homeVar + ")[^\\r\\n]*\\..*"),
+                   "Missing HOME parameter with other text: " + log);
+        assertTrue(log.matches("(?s).*vHOME=(?!" + homeVar + ").*"),
+                   "Missing HOME ant property: " + log);
+        assertTrue(log.matches("(?s).*vFOOHOME=Foo (?!" + homeVar + ").*"),
+                   "Missing HOME ant property with other text: " + log);
     }
 
-    @Issue("JENKINS-7108") @Test
-    public void testEscapeXmlInParameters() throws Exception {
+    @Issue("JENKINS-7108")
+    @Test
+    void testEscapeXmlInParameters() throws Exception {
         String antName = configureDefaultAnt().getName();
         FreeStyleProject project = r.createFreeStyleProject();
         project.setScm(new ExtractResourceSCM(getClass().getResource("ant-job.zip")));
@@ -265,9 +290,9 @@ public class AntTest {
         r.assertLogContains("vFOO=<xml/>", build);
         r.assertLogContains("vBAR=<xml/>", build);
     }
-    
+
     @Test
-    public void invokeCustomTargetTest() throws Exception {
+    void invokeCustomTargetTest() throws Exception {
         FreeStyleProject project = createSimpleAntProject("clean compile", null, null, null);
 
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -280,9 +305,9 @@ public class AntTest {
         assertHtmlLogNotContains(build, "<b class=ant-target>run</b>");
         assertHtmlLogNotContains(build, "<b class=ant-target>main</b>");
     }
-    
+
     @Test
-    public void invokeDefaultTargetTest() throws Exception {
+    void invokeDefaultTargetTest() throws Exception {
         FreeStyleProject project = createSimpleAntProject("", null, null, null);
         
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -295,9 +320,9 @@ public class AntTest {
         assertHtmlLogContains(build, "<b class=ant-target>run</b>");
         assertHtmlLogContains(build, "<b class=ant-target>main</b>");
     }
-    
+
     @Test
-    public void jenkinsEnvVarsFromBuildScriptTest() throws Exception {
+    void jenkinsEnvVarsFromBuildScriptTest() throws Exception {
         String testPropertyValue="FooBar";
 
         FreeStyleProject project = createSimpleAntProject("", null, "build-properties.xml", "testProperty="+testPropertyValue);
@@ -309,7 +334,7 @@ public class AntTest {
     }
 
     @Test
-    public void optionsInTargetFieldTest() throws Exception {
+    void optionsInTargetFieldTest() throws Exception {
         FreeStyleProject project = createSimpleAntProject("-projecthelp", null, null, null);
         
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -319,7 +344,7 @@ public class AntTest {
     }
 
     @Test
-    public void customBuildFileTest() throws Exception {
+    void customBuildFileTest() throws Exception {
         FreeStyleProject project = createSimpleAntProject("", null, "build-custom-name.xml", null);
         
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -334,7 +359,7 @@ public class AntTest {
     }
 
     @Test
-    public void unexistingCustomBuildFileTest() throws Exception {
+    void unexistingCustomBuildFileTest() throws Exception {
         FreeStyleProject project = createSimpleAntProject("", null, "unexsisting.xml", null);
         
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -342,10 +367,10 @@ public class AntTest {
         assertEquals(Result.FAILURE, build.getResult());
         r.assertLogContains("Unable to find build script", build);
     }
-    
+
     @Test
     @Issue("JENKINS-33712")
-    public void emptyParameterTest() throws Exception {
+    void emptyParameterTest() throws Exception {
         FreeStyleProject project = createSimpleAntProject("", null, null, "property=");
         
         FreeStyleBuild build = project.scheduleBuild2(0).get();
@@ -354,13 +379,13 @@ public class AntTest {
     }
 
     @Test
-    public void propertyReplacedByVariable() throws Exception {
+    void propertyReplacedByVariable() throws Exception {
         testVariableReplaced("x");
     }
 
     @Test
     @Issue("JENKINS-41801")
-    public void propertyReplacedByEmptyBuildParameter() throws Exception {
+    void propertyReplacedByEmptyBuildParameter() throws Exception {
         testVariableReplaced("");
     }
 
@@ -372,7 +397,7 @@ public class AntTest {
         ParametersDefinitionProperty paramsDef = new ParametersDefinitionProperty(paramDef);
         project.addProperty(paramsDef);
         
-        Set<String> safeParams = new HashSet<String>();
+        Set<String> safeParams = new HashSet<>();
         safeParams.add("variable");
         ParametersAction parameters = new ParametersAction(Arrays.asList(new ParameterValue[] { new StringParameterValue("variable", variableValue) }), safeParams);
         
@@ -383,9 +408,7 @@ public class AntTest {
 
         // Find ant command line in logs
         String commandLineLine = null;
-        for (int i = 0; i < logs.size(); i++) {
-            String line = logs.get(i);
-
+        for (String line : logs) {
             if (line.contains("ant") && line.contains("build-properties.xml")
                     && line.contains("-DtestProperty=")) {
                 commandLineLine = line;
@@ -393,14 +416,14 @@ public class AntTest {
             }
         }
 
-        assertNotNull("Unable to find ant command line", commandLineLine);
+        assertNotNull(commandLineLine, "Unable to find ant command line");
 
         // space so we can look for empty value
         commandLineLine += " ";
 
         // Check value is expected (with and without quotes)
-        assertTrue("-DtestProperty param not '" + variableValue + "': " + commandLineLine,
-                commandLineLine.contains("-DtestProperty=\"" + variableValue + "\" ") || commandLineLine.contains("-DtestProperty=" + variableValue + " "));
+        assertTrue(commandLineLine.contains("-DtestProperty=\"" + variableValue + "\" ") || commandLineLine.contains("-DtestProperty=" + variableValue + " "),
+                "-DtestProperty param not '" + variableValue + "': " + commandLineLine);
     }
 
     /**
@@ -434,9 +457,11 @@ public class AntTest {
         build.getLogText().writeHtmlTo(0, w);
         return w.toString();
     }
+
     static void assertHtmlLogContains(Run<?, ?> build, String text) throws IOException {
         assertThat(getHtmlLog(build), containsString(text));
     }
+
     static void assertHtmlLogNotContains(Run<?, ?> build, String text) throws IOException {
         assertThat(getHtmlLog(build), not(containsString(text)));
     }
