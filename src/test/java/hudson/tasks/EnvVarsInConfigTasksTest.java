@@ -1,7 +1,8 @@
 package hudson.tasks;
 
 import static hudson.tasks._ant.Messages.Ant_ExecutableNotFound;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import hudson.EnvVars;
 import hudson.model.FreeStyleBuild;
@@ -11,37 +12,44 @@ import hudson.model.Result;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.Ant.AntInstallation;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.ExtractResourceSCM;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
+import org.jvnet.hudson.test.junit.jupiter.BuildWatcherExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class EnvVarsInConfigTasksTest {
-    public static final String DUMMY_LOCATION_VARNAME = "TOOLS_DUMMY_LOCATION";
+import java.io.File;
+
+@WithJenkins
+class EnvVarsInConfigTasksTest {
+    private static final String DUMMY_LOCATION_VARNAME = "TOOLS_DUMMY_LOCATION";
 
     private DumbSlave agentEnv = null;
     private DumbSlave agentRegular = null;
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
+    @SuppressWarnings("unused")
+    private static final BuildWatcherExtension BUILD_WATCHER = new BuildWatcherExtension();
 
-    @Rule public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
 
-    @Rule public TemporaryFolder tmp = new TemporaryFolder();
+    @TempDir
+    private File tmp;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        j = rule;
         JDK defaultJDK = j.jenkins.getJDK(null);
         JDK varJDK = new JDK("varJDK", withVariable(defaultJDK.getHome()));
         j.jenkins.getJDKs().add(varJDK);
 
         // Ant with a variable in its path
-        AntInstallation ant = ToolInstallations.configureDefaultAnt(tmp);
+        TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+        temporaryFolder.create();
+        AntInstallation ant = ToolInstallations.configureDefaultAnt(temporaryFolder);
         AntInstallation antInstallation =
                 new AntInstallation(
                         "varAnt", withVariable(ant.getHome()), JenkinsRule.NO_PROPERTIES);
@@ -53,16 +61,16 @@ public class EnvVarsInConfigTasksTest {
         agentRegular = j.createSlave(new LabelAtom("agentRegular"));
     }
 
-    private String withVariable(String s) {
+    private static String withVariable(String s) {
         return s + "${" + DUMMY_LOCATION_VARNAME + "}";
     }
 
     @Test
-    public void testFreeStyleAntOnAgent() throws Exception {
-        Assume.assumeFalse(
-                "Cannot do testFreeStyleAntOnAgent without ANT_HOME",
+    void testFreeStyleAntOnAgent() throws Exception {
+        assumeFalse(
                 j.jenkins.getDescriptorByType(Ant.DescriptorImpl.class).getInstallations().length
-                        == 0);
+                        == 0,
+                "Cannot do testFreeStyleAntOnAgent without ANT_HOME");
 
         FreeStyleProject project = j.createFreeStyleProject();
         project.setJDK(j.jenkins.getJDK("varJDK"));
