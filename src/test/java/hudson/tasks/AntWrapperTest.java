@@ -29,91 +29,96 @@ import org.htmlunit.html.HtmlPage;
 import hudson.console.ConsoleNote;
 import hudson.model.FreeStyleProject;
 import hudson.slaves.DumbSlave;
+
+import java.io.File;
 import java.util.logging.Level;
+
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runners.model.Statement;
-import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
-import org.jvnet.hudson.test.RestartableJenkinsRule;
-import org.jvnet.hudson.test.ToolInstallations;
+import org.jvnet.hudson.test.*;
+import org.jvnet.hudson.test.junit.jupiter.BuildWatcherExtension;
+import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
 
-public class AntWrapperTest {
+class AntWrapperTest {
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule public RestartableJenkinsRule r = new RestartableJenkinsRule();
-    @Rule public TemporaryFolder tmp = new TemporaryFolder();
-    @Rule public LoggerRule logging = new LoggerRule();
+    @SuppressWarnings("unused")
+    private static final BuildWatcherExtension BUILD_WATCHER = new BuildWatcherExtension();
+    @RegisterExtension
+    private final JenkinsSessionExtension r = new JenkinsSessionExtension();
+    @TempDir
+    private File tmp;
+    private final LogRecorder logging = new LogRecorder();
 
-    @Test public void configRoundTrip() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                Ant.AntInstallation installation = ToolInstallations.configureDefaultAnt(tmp);
-                FreeStyleProject p = r.j.createFreeStyleProject(); // no configRoundTrip(BuildWrapper) it seems
-                AntWrapper aw1 = new AntWrapper();
-                p.getBuildWrappersList().add(aw1);
-                p = r.j.configRoundtrip(p);
-                AntWrapper aw2 = p.getBuildWrappersList().get(AntWrapper.class);
-                r.j.assertEqualDataBoundBeans(aw1, aw2);
-                aw2.setInstallation(installation.getName());
-                p = r.j.configRoundtrip(p);
-                AntWrapper aw3 = p.getBuildWrappersList().get(AntWrapper.class);
-                r.j.assertEqualDataBoundBeans(aw2, aw3);
-            }
+    @Test
+    void configRoundTrip() throws Throwable {
+        r.then(j -> {
+            TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+            temporaryFolder.create();
+            Ant.AntInstallation installation = ToolInstallations.configureDefaultAnt(temporaryFolder);
+            FreeStyleProject p = j.createFreeStyleProject(); // no configRoundTrip(BuildWrapper) it seems
+            AntWrapper aw1 = new AntWrapper();
+            p.getBuildWrappersList().add(aw1);
+            p = j.configRoundtrip(p);
+            AntWrapper aw2 = p.getBuildWrappersList().get(AntWrapper.class);
+            j.assertEqualDataBoundBeans(aw1, aw2);
+            aw2.setInstallation(installation.getName());
+            p = j.configRoundtrip(p);
+            AntWrapper aw3 = p.getBuildWrappersList().get(AntWrapper.class);
+            j.assertEqualDataBoundBeans(aw2, aw3);
         });
     }
 
     /** @see hudson.tasks._ant.AntTargetAnnotationTest#test1 */
-    @Test public void smokes() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                ToolInstallations.configureDefaultAnt(tmp); // TODO could instead use DockerRule<JavaContainer> to run against a specified JDK location
-                DumbSlave s = r.j.createOnlineSlave();
-                logging.recordPackage(ConsoleNote.class, Level.FINE);
-                WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
-                s.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/simple-build.xml"));
-                p.setDefinition(new CpsFlowDefinition("node('!master') {withAnt(installation: 'default') {if (isUnix()) {sh 'ant foo'} else {bat 'ant foo'}}}", true));
-                WorkflowRun b = r.j.buildAndAssertSuccess(p);
-                b.getLogText().writeRawLogTo(0, System.err);
-                AntTest.assertHtmlLogContains(b, "<b class=ant-target>foo</b>");
-                AntTest.assertHtmlLogContains(b, "<b class=ant-target>bar</b>");
-                JenkinsRule.WebClient wc = r.j.createWebClient();
-                HtmlPage c = wc.getPage(b, "console");
-                DomElement o = c.getElementById("console-outline");
-                assertEquals(2, o.getByXPath(".//LI").size());
-            }
+    @Test
+    void smokes() throws Throwable {
+        r.then(j -> {
+            TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+            temporaryFolder.create();
+            ToolInstallations.configureDefaultAnt(temporaryFolder); // TODO could instead use DockerRule<JavaContainer> to run against a specified JDK location
+            DumbSlave s = j.createOnlineSlave();
+            logging.recordPackage(ConsoleNote.class, Level.FINE);
+            WorkflowJob p = j.createProject(WorkflowJob.class, "p");
+            s.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/simple-build.xml"));
+            p.setDefinition(new CpsFlowDefinition("node('!master') {withAnt(installation: 'default') {if (isUnix()) {sh 'ant foo'} else {bat 'ant foo'}}}", true));
+            WorkflowRun b = j.buildAndAssertSuccess(p);
+            b.getLogText().writeRawLogTo(0, System.err);
+            AntTest.assertHtmlLogContains(b, "<b class=ant-target>foo</b>");
+            AntTest.assertHtmlLogContains(b, "<b class=ant-target>bar</b>");
+            JenkinsRule.WebClient wc = j.createWebClient();
+            HtmlPage c = wc.getPage(b, "console");
+            DomElement o = c.getElementById("console-outline");
+            assertEquals(2, o.getByXPath(".//LI").size());
         });
     }
 
-    @Test public void durability() throws Exception {
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                ToolInstallations.configureDefaultAnt(tmp);
-                WorkflowJob p = r.j.createProject(WorkflowJob.class, "p");
-                r.j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/pauses.xml"));
-                p.setDefinition(new CpsFlowDefinition("node {withAnt(installation: 'default') {if (isUnix()) {sh 'ant'} else {bat 'ant'}}}", true));
-                WorkflowRun b = p.scheduleBuild2(0).waitForStart();
-                r.j.waitForMessage("before signal created", b);
-                AntTest.assertHtmlLogContains(b, "<b class=ant-target>prep</b>");
-                AntTest.assertHtmlLogNotContains(b, "<b class=ant-target>main</b>");
-            }
+    @Test
+    void durability() throws Throwable {
+        r.then(j -> {
+            TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+            temporaryFolder.create();
+            ToolInstallations.configureDefaultAnt(temporaryFolder);
+            WorkflowJob p = j.createProject(WorkflowJob.class, "p");
+            j.jenkins.getWorkspaceFor(p).child("build.xml").copyFrom(AntWrapperTest.class.getResource("_ant/pauses.xml"));
+            p.setDefinition(new CpsFlowDefinition("node {withAnt(installation: 'default') {if (isUnix()) {sh 'ant'} else {bat 'ant'}}}", true));
+            WorkflowRun b = p.scheduleBuild2(0).waitForStart();
+            j.waitForMessage("before signal created", b);
+            AntTest.assertHtmlLogContains(b, "<b class=ant-target>prep</b>");
+            AntTest.assertHtmlLogNotContains(b, "<b class=ant-target>main</b>");
         });
-        r.addStep(new Statement() {
-            @Override public void evaluate() throws Throwable {
-                WorkflowJob p = r.j.jenkins.getItemByFullName("p", WorkflowJob.class);
-                WorkflowRun b = p.getBuildByNumber(1);
-                r.j.jenkins.getWorkspaceFor(p).child("signal").write("here", null);
-                r.j.waitForCompletion(b);
-                r.j.assertLogContains("after signal created", b);
-                AntTest.assertHtmlLogContains(b, "<b class=ant-target>main</b>");
-            }
+        r.then(j -> {
+            WorkflowJob p = j.jenkins.getItemByFullName("p", WorkflowJob.class);
+            WorkflowRun b = p.getBuildByNumber(1);
+            j.jenkins.getWorkspaceFor(p).child("signal").write("here", null);
+            j.waitForCompletion(b);
+            j.assertLogContains("after signal created", b);
+            AntTest.assertHtmlLogContains(b, "<b class=ant-target>main</b>");
         });
     }
 
