@@ -73,7 +73,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TemporaryFolder;
+
 import org.jvnet.hudson.test.ExtractResourceSCM;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -244,7 +244,7 @@ class AntTest {
     }
 
     private AntInstallation configureDefaultAnt() throws Exception {
-        TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+        org.junit.rules.TemporaryFolder temporaryFolder = new org.junit.rules.TemporaryFolder(tmp);
         temporaryFolder.create();
         return ToolInstallations.configureDefaultAnt(temporaryFolder);
     }

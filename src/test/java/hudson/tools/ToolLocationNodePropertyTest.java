@@ -38,7 +38,6 @@ import jenkins.model.Jenkins;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.ToolInstallations;
@@ -83,7 +82,7 @@ class ToolLocationNodePropertyTest {
 
     @Test
     void ant() throws Exception {
-        TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+        org.junit.rules.TemporaryFolder temporaryFolder = new org.junit.rules.TemporaryFolder(tmp);
         temporaryFolder.create();
         AntInstallation ant = ToolInstallations.configureDefaultAnt(temporaryFolder);
         String antPath = ant.getHome();

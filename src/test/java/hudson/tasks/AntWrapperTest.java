@@ -41,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.*;
 import org.jvnet.hudson.test.junit.jupiter.BuildWatcherExtension;
 import org.jvnet.hudson.test.junit.jupiter.JenkinsSessionExtension;
@@ -59,7 +58,7 @@ class AntWrapperTest {
     @Test
     void configRoundTrip() throws Throwable {
         r.then(j -> {
-            TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+            org.junit.rules.TemporaryFolder temporaryFolder = new org.junit.rules.TemporaryFolder(tmp);
             temporaryFolder.create();
             Ant.AntInstallation installation = ToolInstallations.configureDefaultAnt(temporaryFolder);
             FreeStyleProject p = j.createFreeStyleProject(); // no configRoundTrip(BuildWrapper) it seems
@@ -79,7 +78,7 @@ class AntWrapperTest {
     @Test
     void smokes() throws Throwable {
         r.then(j -> {
-            TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+            org.junit.rules.TemporaryFolder temporaryFolder = new org.junit.rules.TemporaryFolder(tmp);
             temporaryFolder.create();
             ToolInstallations.configureDefaultAnt(temporaryFolder); // TODO could instead use DockerRule<JavaContainer> to run against a specified JDK location
             DumbSlave s = j.createOnlineSlave();
@@ -101,7 +100,7 @@ class AntWrapperTest {
     @Test
     void durability() throws Throwable {
         r.then(j -> {
-            TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+            org.junit.rules.TemporaryFolder temporaryFolder = new org.junit.rules.TemporaryFolder(tmp);
             temporaryFolder.create();
             ToolInstallations.configureDefaultAnt(temporaryFolder);
             WorkflowJob p = j.createProject(WorkflowJob.class, "p");

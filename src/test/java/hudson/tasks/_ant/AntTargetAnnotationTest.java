@@ -10,7 +10,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.SingleFileSCM;
@@ -48,7 +47,7 @@ public class AntTargetAnnotationTest {
     @Test
     void test1() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
-        TemporaryFolder temporaryFolder = new TemporaryFolder(tmp);
+        org.junit.rules.TemporaryFolder temporaryFolder = new org.junit.rules.TemporaryFolder(tmp);
         temporaryFolder.create();
         Ant.AntInstallation ant = ToolInstallations.configureDefaultAnt(temporaryFolder);
         p.getBuildersList().add(new Ant("foo",ant.getName(),null,null,null));
